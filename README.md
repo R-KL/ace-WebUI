@@ -1,9 +1,9 @@
+
+#(Made as a joke with Gemini, ChatGPT , Co-Pilot ) but works...
 # Rust Ace Editor Web UI
 
 A high-performance, standalone, self-hosted code editor application powered by a Rust backend and a modern web component frontend. The entire application compiles into a single binary for easy deployment.
 
-![Project Screenshot](screenshot.png)
-*(To add a screenshot: run the application, take a picture of it, save it as `screenshot.png` in the project's root directory, and commit it to your repository.)*
 
 ## About The Project
 
