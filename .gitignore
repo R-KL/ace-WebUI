@@ -1,0 +1,11 @@
+# Ignore the entire build output directory
+/target/
+
+# Ignore user-specific settings and saved files
+/files/
+settings.json
+config.yaml
+
+# Ignore IDE-specific files (optional but good practice)
+.vscode/
+.idea/
