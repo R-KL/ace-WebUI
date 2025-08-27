@@ -107,4 +107,4 @@ All settings are managed in the `config.yaml` file.
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` file for more information. *(You can create a file named `LICENSE` and add the text of the MIT license to it).*
+Not Lisensed at all
