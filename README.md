@@ -69,6 +69,7 @@ You will need the Rust toolchain and standard build tools installed.
     server:
       host: "127.0.0.1"
       port: 8080
+      base_path: "/"
 
     storage:
       files_dir: "my_files" # The app will create and serve files from this directory
@@ -91,7 +92,7 @@ You will need the Rust toolchain and standard build tools installed.
     ```
 
 5.  **Access the Web UI:**
-    Open your web browser and navigate to `http://127.0.0.1:8080` (or the host and port you specified in your config).
+    Open your web browser and navigate to `http://127.0.0.1:8080/` (or the host , port  and base_path you specified in your config ).
 
 ## Configuration
 
@@ -101,6 +102,7 @@ All settings are managed in the `config.yaml` file.
 | --------------- | --------------- | -------- | --------------------------------------------------------------------------- |
 | `server`        | `host`          | `String` | The IP address to bind the server to. `127.0.0.1` for local, `0.0.0.0` for public. |
 | `server`        | `port`          | `Number` | The network port the server will listen on.                                 |
+| `server`        | `base_path`     | `string` | Useful when reverse_proxying the website under subpath (eg website/base_path). |
 | `storage`       | `files_dir`     | `String` | The path to the directory where user files will be stored and served from.  |
 | `defaults`      | `theme`         | `String` | The default Ace Editor theme for first-time users (e.g., `ace/theme/monokai`). |
 | `defaults`      | `font_size`     | `Number` | The default font size for first-time users.                                 |
