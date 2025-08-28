@@ -91,8 +91,14 @@ You will need the Rust toolchain and standard build tools installed.
     ```bash
     ./target/release/ace-editor-rust
     ```
+    Or you can use a production grade process manager like pm2 to run this in background easily
+    ```bash
+    sudo npm install pm2
+    cd target/release
+    pm2 start ace-editor
+    ```
 
-5.  **Access the Web UI:**
+6.  **Access the Web UI:**
     Open your web browser and navigate to `http://127.0.0.1:8080/` (or the host , port  and base_path you specified in your config ).
 
 ## Configuration
