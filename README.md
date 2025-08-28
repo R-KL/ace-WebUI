@@ -91,9 +91,10 @@ You will need the Rust toolchain and standard build tools installed.
     ```bash
     ./target/release/ace-editor-rust
     ```
-    Or you can use a production grade process manager like pm2 to run this in background easily
+    Or you can use a production grade process manager like pm2 to run this in background easily (assuming node.js is installed in the server
+    else download npm and node.js first for easy deployment
     ```bash
-    sudo npm install pm2
+    npm install pm2 -g
     cd target/release
     pm2 start ace-editor
     ```
