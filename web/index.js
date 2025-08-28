@@ -1,24 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
     const editor = ace.edit("editor");
     editor.session.setMode("ace/mode/text");
+    
 
-    // --- Core State Tracking ---
     let currentFile = null;
-    let currentSource = null; // "server" or "pc"
+    let currentSource = null; 
 
-    // --- NEW: UI State and Elements ---
+
     let isDirty = false;
     const statusBar = document.getElementById("status-bar");
     let statusTimeout;
 
-    // NEW: Safety check to ensure the HTML is correct.
+
     if (!statusBar) {
         console.error("FATAL: UI element #status-bar not found. Please check your index.html file.");
         alert("Error: UI is not configured correctly. Status bar is missing.");
-        return; // Stop the script if the UI is broken
+        return; 
     }
 
-    // --- NEW: Helper Functions for UI ---
+
 
     // Sets the message in the status bar. It can fade after a delay.
     function showStatus(message, duration = 4000) {
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Call it once on startup
     updateFileStatus();
 
-    // --- NEW: Listener for unsaved changes ---
+
     editor.session.on('change', () => {
         // Only mark as dirty if it's not already, to avoid running this on every keystroke
         if (!isDirty) {
@@ -56,8 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- Settings (Your existing logic, works as is) ---
-    const settingsUrl = new URL("./settings", window.location.href);
+    // --- Settings ---
+    const settingsUrl = new URL("settings", document.baseURI);
     fetch(settingsUrl)
         .then(response => {
             if (response.ok) return response.json();
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     window.addEventListener("beforeunload", saveSettings);
 
-    // --- Settings Menu (Your existing logic, works as is) ---
+    // --- Settings Menu  ---
     ace.config.loadModule("ace/ext/settings_menu", function (module) {
         module.init(editor);
         document.getElementById("settings-button").onclick = () => {
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- File Handling (Your logic, UPDATED with status messages) ---
+    // --- File Handling  ---
     const dropdownContainer = document.querySelector('.dropdown-container');
     const loadButton = document.getElementById("load-button");
     const serverButton = document.getElementById("load-server");
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const uploadButton = document.getElementById("upload-button");
     const fileInput = document.getElementById("file-input");
 
-    // Dropdown menu logic (Your existing logic, works as is)
+    // Dropdown menu logic 
     loadButton.addEventListener("click", (e) => {
         e.stopPropagation();
         dropdownContainer.classList.toggle("open");
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!res.ok) throw new Error(`Server returned ${res.status}: ${await res.text()}`);
             const text = await res.text();
             
-            // UPDATED: Set state and UI
+          
             editor.setValue(text, -1);
             currentFile = name;
             currentSource = "server";
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateFileStatus();
 
         } catch (err) {
-            // UPDATED: Replaced alert with status bar message
+            // Replaced alert with status bar message
             showStatus(`Error loading file: ${err.message}`);
         }
     };
@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showStatus(`Loading "${file.name}" from PC...`, 0);
         const text = await file.text();
         
-        // UPDATED: Set state and UI
+        //  Set state and UI
         editor.setValue(text, -1);
         currentFile = file.name;
         currentSource = "pc";
@@ -163,11 +163,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.target.value = '';
     };
 
-    // Upload (Save)
+    // Save
     uploadButton.onclick = async () => {
         const content = editor.getValue();
         if (!currentFile) {
-            // UPDATED: Replaced alert with status bar message
+            // Replaced alert with status bar message
             showStatus("Error: No file is loaded to save.");
             return;
         }
