@@ -66,10 +66,11 @@ You will need the Rust toolchain and standard build tools installed.
 2.  **Configure the application:**
     The application is configured using a `config.yaml` file. Create a new file named `config.yaml` and add the following content, adjusting as needed:
     ```yaml
+    #any part of this yaml file or the entire yaml file can be ommited to use default values
     server:
-      host: "127.0.0.1"
-      port: 8080
-      base_path: "/"
+      host: "127.0.0.1" #default value
+      port: 6556 #default value
+      base_path: "/" #default value
 
     storage:
       files_dir: "my_files" # The app will create and serve files from this directory
