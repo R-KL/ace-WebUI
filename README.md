@@ -78,14 +78,30 @@ You will need the Rust toolchain and standard build tools installed.
       theme: "ace/theme/chrome"
       font_size: 14
     ```
+    Alternatively paste this code to the terminal
+    ```bash
+    echo "
+    #any part of this yaml file or the entire yaml file can be ommited to use default values
+    server:
+      host: "127.0.0.1" #default value
+      port: 6556 #default value
+      base_path: "/" #default value
 
-3.  **Build the application for release:**
+    storage:
+      files_dir: "my_files" # The app will create and serve files from this directory
+
+    defaults:
+      theme: "ace/theme/chrome"
+      font_size: 14
+    " > config.yaml
+    
+4.  **Build the application for release:**
     This command compiles the code with optimizations and embeds all the web assets.
     ```bash
     cargo build --release
     ```
 
-4.  **Run the application:**
+5.  **Run the application:**
     The final binary will be in the `target/release/` directory.
     ```bash
     ./target/release/ace-editor-rust
