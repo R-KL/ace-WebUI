@@ -59,7 +59,7 @@ You will need the Rust toolchain and standard build tools installed.
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YourUsername/rust-ace-editor.git](https://github.com/YourUsername/rust-ace-editor.git)
+    git clone https://github.com/R-KL/ace-WebUI.git rust-ace-editor
     cd rust-ace-editor
     ```
 
