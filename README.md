@@ -1,4 +1,4 @@
-# Rust Ace Editor Web UI
+#  Ace Editor Web UI Built in Rust
 
 A high-performance, standalone, self-hosted code editor powered by a Rust backend and a modern web component frontend. The entire application compiles into a single binary for easy deployment.
 
