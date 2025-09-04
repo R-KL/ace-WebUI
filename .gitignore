@@ -2,7 +2,7 @@
 /target/
 
 # Ignore user-specific settings and saved files
-/files/
+/web/files/
 settings.json
 config.yaml
 
