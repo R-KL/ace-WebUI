@@ -61,9 +61,10 @@ You will need the Rust toolchain and standard build tools installed.
     git clone https://github.com/R-KL/ace-WebUI.git rust-ace-editor
     cd rust-ace-editor
     ```
-
-2.  **Configure the application:**
-    The application is configured using a `config.yaml` file. Create a new file named `config.yaml` and add the following content, adjusting as needed:
+    you can use any folder-name, but make sure its somewhere not prone to accedental change. most of the scripts provided assumes
+    to be executed from the above cloned directory
+3.  **Configure the application:**
+    The application can be configured using a `config.yaml` file. Create a new file named `config.yaml` and add the following content, adjusting as needed:
     ```yaml
     #any part of this yaml file or the entire yaml file can be ommited to use default values
     server:
@@ -79,6 +80,7 @@ You will need the Rust toolchain and standard build tools installed.
       font_size: 14
     ```
     Alternatively paste this code to the terminal ( again only has a template, this file is not required for the proper execution of the editor)
+    From the current working directory, execute...
     ```bash
     echo "
     #any part of this yaml file or the entire yaml file can be ommited to use default values
@@ -91,31 +93,80 @@ You will need the Rust toolchain and standard build tools installed.
       files_dir: "my_files" # The app will create and serve files from this directory
 
     defaults:
-      theme: "ace/theme/chrome"
+      theme: "ace/theme/monkai"
       font_size: 14
     " > config.yaml
     
-4.  **Build the application for release:**
+5.  **Build the application for release:**
+
+    PreBuilt Binaries are not available due to chances of errors from differnt dependencies
+    Its best to build from source, later you can delete everything except the `target` folder
     This command compiles the code with optimizations and embeds all the web assets.
     ```bash
     cargo build --release
     ```
 
-5.  **Run the application:**
+6.  **Run the application:**
+7.  *** Option 1 ***
     The final binary will be in the `target/release/` directory.
     ```bash
-    ./target/release/ace-editor-rust
+    ./target/release/ace-editor
     ```
-    Or you can use a production grade process manager like pm2 to run this in background easily (assuming node.js is installed in the server
-    else download npm and node.js first for easy deployment)
+    *** Option 2 ***
+    Or optionally you can use a production grade process manager like pm2 or even systemd to run this in background easily
+    ****PM2****
+    (assuming node.js is installed in the machine, else download npm and node.js first for easy deployment.
+    pm2 is primearly meant for node applications but can generally  run any kind of process )
     ```bash
     npm install pm2 -g
-    cd target/release
-    pm2 start ace-editor
+    pm2 start ./target/release/ace-editor 
     ```
+    Note that right now everything needed by the Web-editor is self-contained , But after setup do not delete the `ace-editor`
+    binary, if moving somewere else be sure to change the path in PM2, as simple has
+    ```bash
+    pm2 delete ace-editor
+    ```
+    then
+    ```bash
+    pm2 start /new/path/to/ace-editor
+    ```
+    also change the directory of config.yaml as the binary checks its current working directory only
+    ****systemD****
+    (assuming your running a Linux Distribution like Debian/Ubuntu that uses systemD by default. For other distros please refer their own docs
+    or use method above or run baremetal has shown in option 1 )
+    The below code is supposed to be run from the cloned directory, which is by default `rust-ace-editor` assuming a quick setup.
+    If your planning to move the binary  ****please edit the WorkingDirectory and the ExecStart path in the service file****
+    to new value (new absolute path)
+    ```bash
+    sudo tee /etc/systemd/system/ace-editor.service > /dev/null <<EOF
+    [Unit]
+    Description=Rust Ace Editor Web UI
+    After=network.target
 
-6.  **Access the Web UI:**
-    Open your web browser and navigate to `http://127.0.0.1:8080/` (or the host , port  and base_path you specified in your config ).
+    [Service]
+    Type=simple
+    User=$(whoami)
+    WorkingDirectory=$(pwd)
+    ExecStart=$(pwd)/target/release/ace-editor
+    Restart=on-failure
+    Environment=RUST_LOG=info
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    sudo systemctl daemon-reload
+    sudo systemctl enable ace-editor.service
+    sudo systemctl start ace-editor.service
+    ```    
+9.  **Access the Web UI:**
+    Open your web browser and navigate to `http://127.0.0.1:6556/` (or the host , port  and base_path you specified in your config ).
+
+    
+## Issues
+   Some common Issues that can be faced...
+    |          Issue         |                Solution                |
+    | ---------------------- | -------------------------------------- |
+    | `config.yaml` not loading properly | check if template matchs if yes then make sure `config.yaml` is in the working directory |
 
 ## Configuration
 
