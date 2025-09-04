@@ -78,7 +78,7 @@ You will need the Rust toolchain and standard build tools installed.
       theme: "ace/theme/chrome"
       font_size: 14
     ```
-    Alternatively paste this code to the terminal
+    Alternatively paste this code to the terminal ( again only has a template, this file is not required for the proper execution of the editor)
     ```bash
     echo "
     #any part of this yaml file or the entire yaml file can be ommited to use default values
