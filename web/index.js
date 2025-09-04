@@ -1,7 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
     const editor = ace.edit("editor");
+    const modelist = ace.require("ace/ext/modelist");
     editor.session.setMode("ace/mode/text");
-    
+    editor.setOptions({
+            enableBasicAutocompletion: true,  // <--- for keywords and snippets
+            enableLiveAutocompletion: true,   // <--- shows popup while typing
+            enableSnippets: true               // <--- optional, if you use snippet completions
+        });
 
     let currentFile = null;
     let currentSource = null; 
@@ -33,7 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }, duration);
         }
     }
-
+    // Automatically sets the editor mode based on the file extension.
+    function setEditorMode(filename) {
+        const mode = modelist.getModeForPath(filename).mode;
+        console.log(`Setting editor mode to: ${mode}`);
+        editor.session.setMode(mode);
+    }
     // Updates the status bar to show the current file and its "dirty" state.
     function updateFileStatus() {
         if (currentFile) {
@@ -130,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
           
             editor.setValue(text, -1);
             currentFile = name;
+            setEditorMode(name);
             currentSource = "server";
             isDirty = false;
             updateFileStatus();
@@ -156,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
         //  Set state and UI
         editor.setValue(text, -1);
         currentFile = file.name;
+        setEditorMode(file.name);
         currentSource = "pc";
         isDirty = false;
         updateFileStatus();
