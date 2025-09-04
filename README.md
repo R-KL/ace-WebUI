@@ -35,7 +35,6 @@ The entire set of web assets (HTML, CSS, JavaScript) is embedded into the Rust e
 * **Frontend:**
     * HTML5 / CSS3 / Vanilla JavaScript
     * [Ace Editor](https://ace.c9.io/)
-    * [File Tree Web Component](https://www.cssscript.com/file-tree-web-component/)
 
 ## Getting Started
 
@@ -79,14 +78,30 @@ You will need the Rust toolchain and standard build tools installed.
       theme: "ace/theme/chrome"
       font_size: 14
     ```
+    Alternatively paste this code to the terminal ( again only has a template, this file is not required for the proper execution of the editor)
+    ```bash
+    echo "
+    #any part of this yaml file or the entire yaml file can be ommited to use default values
+    server:
+      host: "127.0.0.1" #default value
+      port: 6556 #default value
+      base_path: "/" #default value
 
-3.  **Build the application for release:**
+    storage:
+      files_dir: "my_files" # The app will create and serve files from this directory
+
+    defaults:
+      theme: "ace/theme/chrome"
+      font_size: 14
+    " > config.yaml
+    
+4.  **Build the application for release:**
     This command compiles the code with optimizations and embeds all the web assets.
     ```bash
     cargo build --release
     ```
 
-4.  **Run the application:**
+5.  **Run the application:**
     The final binary will be in the `target/release/` directory.
     ```bash
     ./target/release/ace-editor-rust
@@ -116,5 +131,15 @@ All settings are managed in the `config.yaml` file.
 | `defaults`      | `font_size`     | `Number` | The default font size for first-time users.                                 |
 
 ## License
-
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Third-Party Licenses
+This project uses the following open-source components:
+
+| Component    | License | Notes |
+| ------------ | ------- | ----- |
+| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause | Embedded in `web/ace/ace.js`. License headers are preserved in source files. |
+| [Rust-Embed](https://git.sr.ht/~pyrossh/rust-embed) | MIT/Apache-2.0 | Used to embed static assets into the Rust binary. |
+
+> **Note:** All third-party licenses are respected. No modifications have removed or altered their original license notices.
+
