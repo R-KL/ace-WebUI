@@ -35,7 +35,6 @@ The entire set of web assets (HTML, CSS, JavaScript) is embedded into the Rust e
 * **Frontend:**
     * HTML5 / CSS3 / Vanilla JavaScript
     * [Ace Editor](https://ace.c9.io/)
-    * [File Tree Web Component](https://www.cssscript.com/file-tree-web-component/)
 
 ## Getting Started
 
