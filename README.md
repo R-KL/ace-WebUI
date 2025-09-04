@@ -115,5 +115,15 @@ All settings are managed in the `config.yaml` file.
 | `defaults`      | `font_size`     | `Number` | The default font size for first-time users.                                 |
 
 ## License
-
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Third-Party Licenses
+This project uses the following open-source components:
+
+| Component    | License | Notes |
+| ------------ | ------- | ----- |
+| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause | Embedded in `static/js/ace/`. License headers are preserved in source files. |
+| [Rust-Embed](https://github.com/pyrossh/rust-embed) | MIT/Apache-2.0 | Used to embed static assets into the Rust binary. |
+
+> **Note:** All third-party licenses are respected. No modifications have removed or altered their original license notices.
+
