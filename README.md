@@ -66,9 +66,11 @@ You will need the Rust toolchain and standard build tools installed.
 2.  **Configure the application:**
     The application is configured using a `config.yaml` file. Create a new file named `config.yaml` and add the following content, adjusting as needed:
     ```yaml
+    #any part of this yaml file or the entire yaml file can be ommited to use default values
     server:
-      host: "127.0.0.1"
-      port: 8080
+      host: "127.0.0.1" #default value
+      port: 6556 #default value
+      base_path: "/" #default value
 
     storage:
       files_dir: "my_files" # The app will create and serve files from this directory
@@ -89,9 +91,16 @@ You will need the Rust toolchain and standard build tools installed.
     ```bash
     ./target/release/ace-editor-rust
     ```
+    Or you can use a production grade process manager like pm2 to run this in background easily (assuming node.js is installed in the server
+    else download npm and node.js first for easy deployment)
+    ```bash
+    npm install pm2 -g
+    cd target/release
+    pm2 start ace-editor
+    ```
 
-5.  **Access the Web UI:**
-    Open your web browser and navigate to `http://127.0.0.1:8080` (or the host and port you specified in your config).
+6.  **Access the Web UI:**
+    Open your web browser and navigate to `http://127.0.0.1:8080/` (or the host , port  and base_path you specified in your config ).
 
 ## Configuration
 
@@ -101,6 +110,7 @@ All settings are managed in the `config.yaml` file.
 | --------------- | --------------- | -------- | --------------------------------------------------------------------------- |
 | `server`        | `host`          | `String` | The IP address to bind the server to. `127.0.0.1` for local, `0.0.0.0` for public. |
 | `server`        | `port`          | `Number` | The network port the server will listen on.                                 |
+| `server`        | `base_path`     | `string` | Useful when reverse_proxying the website under subpath (eg website/base_path). |
 | `storage`       | `files_dir`     | `String` | The path to the directory where user files will be stored and served from.  |
 | `defaults`      | `theme`         | `String` | The default Ace Editor theme for first-time users (e.g., `ace/theme/monokai`). |
 | `defaults`      | `font_size`     | `Number` | The default font size for first-time users.                                 |
