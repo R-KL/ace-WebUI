@@ -157,9 +157,11 @@ Install the Rust toolchain and standard build tools.
 
 Some common issues and solutions:
 
-| Issue                           | Solution                                                                 |
-|----------------------------------|--------------------------------------------------------------------------|
-| `config.yaml` not loading properly | Check if template matches. If yes, make sure `config.yaml` is in the working directory. |
+| Issue                              | Solution                                                                                          |
+|-------------------------------------|---------------------------------------------------------------------------------------------------|
+| `config.yaml` not loading properly  | Ensure the template matches the expected format and that `config.yaml` is in the working directory.|
+| Website appears offline             | Verify firewall settings allow traffic on the configured port in `config.yaml` (or the default port).|
+| Settings not saved persistently     | Confirm the working directory has write permissions.                                               |
 
 ## Configuration
 

@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const modelist = ace.require("ace/ext/modelist");
     editor.session.setMode("ace/mode/text");
     editor.setOptions({
-            enableBasicAutocompletion: true,  // <--- for keywords and snippets
-            enableLiveAutocompletion: true,   // <--- shows popup while typing
-            enableSnippets: true               // <--- optional, if you use snippet completions
+            enableBasicAutocompletion: true,  
+            enableLiveAutocompletion: true,   
+            enableSnippets: true               
         });
 
     let currentFile = null;
@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- File Handling  ---
+    // File Handling  
     const dropdownContainer = document.querySelector('.dropdown-container');
     const loadButton = document.getElementById("load-button");
     const serverButton = document.getElementById("load-server");
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
           
             editor.setValue(text, -1);
             currentFile = name;
-            setEditorMode(name);
+            setEditorMode(name); // Automatically set mode based on filename
             currentSource = "server";
             isDirty = false;
             updateFileStatus();
