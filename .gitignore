@@ -1,6 +1,6 @@
 # Ignore the entire build output directory
-/target/
-
+/backend/target/
+/backend/settings.json
 # Ignore user-specific settings and saved files
 /web/files/
 settings.json

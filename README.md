@@ -186,8 +186,8 @@ This project uses the following open-source components:
 
 | Component    | License         | Notes                                                                 |
 |--------------|-----------------|-----------------------------------------------------------------------|
-| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause    | Embedded in `web/ace/ace.js`. License headers are preserved in source files. |
+| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause    | Embedded in `web/ace/ace.js`. License headers are preserved in source files if any as is   |
 | [Rust-Embed](https://git.sr.ht/~pyrossh/rust-embed) | MIT/Apache-2.0 | Used to embed static assets into the Rust binary.                        |
-
+| [Icons](https://pictogrammers.com/) | MIT/Apache-2.0 | Icons used from Pictogrammers.com                                   |
 > **Note:** All third-party licenses are respected. No modifications have removed or altered their original license notices.
 

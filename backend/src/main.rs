@@ -127,7 +127,7 @@ struct FileQuery {
 }
 
 #[derive(RustEmbed)]
-#[folder = "web/"]
+#[folder = "../web/"]
 struct Assets;
 
 #[derive(Clone)]
