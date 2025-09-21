@@ -1,7 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Demo Mode - No Backend Hosted (for GitHub Pages)
+    const DEMO_MODE = true;
+    
     const editor = ace.edit("editor");
     const modelist = ace.require("ace/ext/modelist");
+    const themeList = ace.require("ace/ext/themelist");
     editor.session.setMode("ace/mode/text");
+    editor.setTheme("ace/theme/ambiance"); // Set initial theme to ambiance
     editor.setOptions({
             enableBasicAutocompletion: true,  
             enableLiveAutocompletion: true,   
@@ -67,27 +72,53 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // --- Settings ---
-    const settingsUrl = new URL("settings", document.baseURI);
-    fetch(settingsUrl)
-        .then(response => {
-            if (response.ok) return response.json();
-            throw new Error("Could not fetch settings.");
-        })
-        .then(state => {
-            if (state.theme) editor.setTheme(state.theme);
-            if (state.fontSize) editor.setFontSize(state.fontSize);
-        }).catch(err => console.warn("Could not load settings:", err));
+    if (DEMO_MODE) {
+        // Demo Mode: Use localStorage instead of server
+        try {
+            const savedSettings = localStorage.getItem('aceEditorSettings');
+            if (savedSettings) {
+                const state = JSON.parse(savedSettings);
+                if (state.theme) editor.setTheme(state.theme);
+                if (state.fontSize) editor.setFontSize(state.fontSize);
+            }
+        } catch (err) {
+            console.warn("Demo Mode: Could not load settings from localStorage:", err);
+        }
+    } else {
+        // Server Mode (when backend is available)
+        const settingsUrl = new URL("settings", document.baseURI);
+        fetch(settingsUrl)
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error("Could not fetch settings.");
+            })
+            .then(state => {
+                if (state.theme) editor.setTheme(state.theme);
+                if (state.fontSize) editor.setFontSize(state.fontSize);
+            }).catch(err => console.warn("Could not load settings:", err));
+    }
 
     function saveSettings() {
         const state = {
             theme: editor.getTheme(),
             fontSize: editor.getFontSize()
         };
-        fetch("./settings", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(state)
-        }).catch(err => console.error("Save settings failed:", err));
+        
+        if (DEMO_MODE) {
+            // Demo Mode: Save to localStorage
+            try {
+                localStorage.setItem('aceEditorSettings', JSON.stringify(state));
+            } catch (err) {
+                console.error("Demo Mode: Save settings to localStorage failed:", err);
+            }
+        } else {
+            // Server Mode: Save to server
+            fetch("./settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(state)
+            }).catch(err => console.error("Save settings failed:", err));
+        }
     }
     window.addEventListener("beforeunload", saveSettings);
 
@@ -129,6 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load from server
     serverButton.onclick = async () => {
         closeDropdown();
+        
+        if (DEMO_MODE) {
+            showStatus("Action Disabled in Demo Mode (No Backend Hosted)");
+            return;
+        }
+        
         const name = prompt("Enter filename to load from server:");
         if (!name) return;
         showStatus(`Loading "${name}" from server...`, 0); // Permanent message until loaded
@@ -202,6 +239,11 @@ document.addEventListener("DOMContentLoaded", () => {
             showStatus(`Saved "${currentFile}" to your PC.`);
 
         } else if (currentSource === "server") {
+            if (DEMO_MODE) {
+                showStatus("Server Save Disabled in Demo Mode (No Backend Hosted). Use local save instead.");
+                return;
+            }
+            
             try {
                 const res = await fetch("./file?name=" + encodeURIComponent(currentFile), {
                     method: "POST",
@@ -216,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (err) {
                 // UPDATED: Replaced alert with status bar message
-                showStatus(`Error saving file: ${err.message}`);
+                showStatus(`Action Disabled in Demo Mode (No Backend Hosted)`);
             }
         }
     };
