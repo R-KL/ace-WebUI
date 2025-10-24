@@ -157,24 +157,24 @@ Install the Rust toolchain and standard build tools.
 
 Some common issues and solutions:
 
-| Issue                              | Solution                                                                                          |
-|-------------------------------------|---------------------------------------------------------------------------------------------------|
-| `config.yaml` not loading properly  | Ensure the template matches the expected format and that `config.yaml` is in the working directory.|
-| Website appears offline             | Verify firewall settings allow traffic on the configured port in `config.yaml` (or the default port).|
-| Settings not saved persistently     | Confirm the working directory has write permissions.                                               |
+| Issue                              | Solution                                                                                               |
+|-------------------------------------|---------------------------------------------------------------------------------------------------    |
+| `config.yaml` not loading properly  | Ensure the template matches the expected format and that `config.yaml` is in the working directory.   |
+| Website appears offline             | Verify firewall settings allow traffic on the configured port in `config.yaml` (or the default port). |
+| Settings not saved persistently     | Confirm the working directory has write permissions.                                                  |
 
 ## Configuration
 
 All settings are managed in the `config.yaml` file.
 
-| Section    | Key         | Type     | Description                                                                 |
-|------------|-------------|----------|-----------------------------------------------------------------------------|
-| `server`   | `host`      | String   | The IP address to bind the server to. `127.0.0.1` for local, `0.0.0.0` for public. |
-| `server`   | `port`      | Number   | The network port the server will listen on.                                 |
-| `server`   | `base_path` | String   | Useful when reverse proxying the website under a subpath (e.g., website/base_path). |
-| `storage`  | `files_dir` | String   | The path to the directory where user files will be stored and served from.  |
-| `defaults` | `theme`     | String   | The default Ace Editor theme for first-time users (e.g., `ace/theme/monokai`). |
-| `defaults` | `font_size` | Number   | The default font size for first-time users.                                 |
+| Section    | Key         | Type     | Description                                                                           |
+|------------|-------------|----------|-----------------------------------------------------------------------------          |
+| `server`   | `host`      | String   | The IP address to bind the server to. `127.0.0.1` for local, `0.0.0.0` for public.    |
+| `server`   | `port`      | Number   | The network port the server will listen on.                                           |
+| `server`   | `base_path` | String   | Useful when reverse proxying the website under a subpath (e.g., website/base_path).   |
+| `storage`  | `files_dir` | String   | The path to the directory where user files will be stored and served from.            |
+| `defaults` | `theme`     | String   | The default Ace Editor theme for first-time users (e.g., `ace/theme/monokai`).        |
+| `defaults` | `font_size` | Number   | The default font size for first-time users.                                           |
 
 ## License
 
@@ -184,9 +184,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 This project uses the following open-source components:
 
-| Component    | License         | Notes                                                                 |
-|--------------|-----------------|-----------------------------------------------------------------------|
-| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause    | Embedded in `web/ace/ace.js`. License headers are preserved in source files. |
+| Component    | License         | Notes                                                                                                          |
+|--------------|-----------------|-----------------------------------------------------------------------                                         |
+| [Ace Editor](https://ace.c9.io/) | BSD-3-Clause    | Embedded in `web/ace/ace.js`. License headers are preserved in source files.               |
 | [Rust-Embed](https://git.sr.ht/~pyrossh/rust-embed) | MIT/Apache-2.0 | Used to embed static assets into the Rust binary.                        |
 
 > **Note:** All third-party licenses are respected. No modifications have removed or altered their original license notices.
