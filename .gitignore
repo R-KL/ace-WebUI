@@ -1,11 +1,12 @@
 # Ignore the entire build output directory
 /target/
-
+dist/
 # Ignore user-specific settings and saved files
 /web/files/
 settings.json
 config.yaml
-
+node_modules/
 # Ignore IDE-specific files (optional but good practice)
 .vscode/
 .idea/
+.vite/
