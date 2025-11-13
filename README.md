@@ -1,8 +1,8 @@
 #  Ace-Editor Web-UI Built in Rust
-## This is the Alpha Branch . The Entire fontend is being rewritten in Alpine.js and tailwindcss for better UI/UX features and to add more functionality in fucture releases.
+## This is the Alpha Branch . The Entire fontend is being rewritten in Alpine.js and tailwindcss for better UI/UX features and to add more functionality in future releases.
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/R-KL/ace-WebUI)](
+[![GitHub issues](https://img.shields.io/github/issues/R-KL/ace-WebUI)]()
 A high-performance, standalone, self-hosted code editor powered by a Rust backend and a modern web component frontend. The entire application compiles into a single binary for easy deployment.
 
 ## About The Project
