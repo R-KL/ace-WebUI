@@ -6,6 +6,7 @@ dist/
 settings.json
 config.yaml
 node_modules/
+alpineport/settingsmenutemplate.html
 # Ignore IDE-specific files (optional but good practice)
 .vscode/
 .idea/
