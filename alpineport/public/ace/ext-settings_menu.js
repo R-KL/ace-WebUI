@@ -26,7 +26,6 @@ var dom = require("../../lib/dom");
 var cssText = require("./settings_menu.css");
 dom.importCssString(cssText, "settings_menu.css", false);
 module.exports.overlayPage = function overlayPage(editor, contentElement, callback) {
-    const PubSub = editor.PubSub;
     var closer = document.createElement('div');
     var ignoreFocusOut = false;
     function documentEscListener(e) {
@@ -44,11 +43,8 @@ module.exports.overlayPage = function overlayPage(editor, contentElement, callba
         }
         closer = null;
         callback && callback();
-        PubSub.publish("ace:settingsMenu:closed","")
+        document.dispatchEvent(new Event('settings-menu-closed'));
     }
-    PubSub.subscribe("ace:settingsMenu:close", function() {
-       close();
-    });
     function setIgnoreFocusOut(ignore) {
         ignoreFocusOut = ignore;
         if (ignore) {
@@ -848,13 +844,12 @@ function showSettingsMenu(editor) {
         options.render();
         options.container.id = "ace_settingsmenu";
         overlayPage(editor, options.container);
-        editor.PubSub.publish("ace:settingsMenu:opened","");
     }
 }
 module.exports.init = function () {
     var Editor = require("../editor").Editor;
     Editor.prototype.showSettingsMenu = function () {
-        showSettingsMenu(this);
+      showSettingsMenu(this);
     };
 };
 

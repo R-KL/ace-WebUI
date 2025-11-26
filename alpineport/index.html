@@ -11,17 +11,24 @@
 
 </head>
 
-<body x-data="AceApp()" class="h-screen flex flex-col">
-    <div class="grow w-full relative">
-        <div id="editor" class="h-full w-full" style="height: calc(100% - 1.5rem);">function foo(items)
-            { var x = "All this is syntax
-            highlighted"; return x;
-            }
+<body x-data="AceApp()" class="h-full flex flex-col">
+    <div class="grow w-full relative h-screen">
+        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[70vh]'" x-effect="resizeEditor();" class="h-[96vh]">
+            <div id="editor" class="h-full w-full">
+                { var x = "All this is syntax
+                highlighted"; return x;
+                }
+            </div>
         </div>
         <div id="floating-buttons" class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
             <button @click="openSettingsMenu()" class="side-button group">
                 <svg class="group-hover:animate-spin">
                     <use href="/src/assets/sprite.svg#icon-settings"></use>
+                </svg>
+            </button>
+            <button  @click="$store.bottomBar.move = !$store.bottomBar.move" class="side-button group">
+                <svg class="group-hover:animate-pulse">
+                    <use href="/src/assets/sprite.svg#terminal"></use>
                 </svg>
             </button>
             <button class="side-button group">
@@ -57,17 +64,35 @@
                 </div>
             </div>
         </div>
-        <div id="bottom-bar" class="absolute bottom-0 left-0 right-0 flex h-6 z-10">
-            <div id="status-bar" x-data="{ message: 'No file loaded' }"
-                class="flex-1 bg-[#303030] flex-row px-2">
-                <span class="text-white" x-text="message"></span>
+
+        <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[30vh]'"
+            class="absolute bottom-0 left-0 right-0 flex flex-col z-10">
+            <div id="bottom-row" class="flex flex-row h-8">
+                <div id="status-bar" x-data="{ message: 'No file loaded' }" class="bg-[#303030]  px-2">
+                    <span class="text-white" x-text="message"></span>
+                </div>
+                <div id="language-status" x-data="{  }"
+                    class="bg-[#303030] grow flex items-center justify-end select-none px-2">
+                    <div x-data="AceStatusBar()" x-init="init()" class="flex flex-row">
+                        <span id="status-bar-ace" class="flex-row h-full self-center"></span>
+                        <span id="language-icon" class="text-white px-1 h-full "><img
+                                class="object-contain max-w-full max-h-7 w-auto h-auto"
+                                :src="generateIcon(languageSelected, languageSelected)"></span>
+                        <span class="text-white px-1" x-text="languageSelected"></span>
+                    </div>
+                </div>
             </div>
-            <div id="language-status" x-data="{  }"
-                class="bg-[#303030] h-6 grow flex items-center justify-end select-none px-2">
-                <span id="status-bar-ace" x-data="AceStatusBar()" x-init="init()" class="flex-row"></span>
-                <span class="text-white px-1" x-text="languageSelected"></span>
-            </div>
+            <template x-if="$store.bottomBar.move">
+                <div x-ref="terminal" x-data="terminal" x-init="init()" class="grow h-full overflow-hidden">
+                </div>
+            </template>
         </div>
+        <template x-if="menuCloseButton">
+            <div x-ref="clsBtn" class="ace_optionsMenuEntry justify-center!" @click="closeSettingsMenu()">Close
+                Menu
+            </div>
+        </template>
+    </div>
 </body>
 
 </html>
