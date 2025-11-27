@@ -13,29 +13,34 @@
 
 <body x-data="AceApp()" class="h-full flex flex-col">
     <div class="grow w-full relative h-screen">
-        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[70vh]'" x-effect="resizeEditor();" class="h-[96vh]">
+        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[70vh]'" class="h-[96vh]">
             <div id="editor" class="h-full w-full">
                 { var x = "All this is syntax
                 highlighted"; return x;
                 }
             </div>
         </div>
-        <div id="floating-buttons" class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
+        <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
+            class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
             <button @click="openSettingsMenu()" class="side-button group">
                 <svg class="group-hover:animate-spin">
                     <use href="/src/assets/sprite.svg#icon-settings"></use>
                 </svg>
             </button>
-            <button  @click="$store.bottomBar.move = !$store.bottomBar.move" class="side-button group">
+            <button @click="$store.bottomBar.move = !$store.bottomBar.move" class="side-button group">
                 <svg class="group-hover:animate-pulse">
-                    <use href="/src/assets/sprite.svg#terminal"></use>
+                    <use href="/src/assets/sprite.svg#icon-terminal"></use>
                 </svg>
             </button>
-            <button class="side-button group">
-                <svg class="group-hover:animate-pulse">
-                    <use href="/src/assets/sprite.svg#icon-save"></use>
-                </svg>
-            </button>
+            <template x-if="$store.marked.previewButton">
+                <button @click="$store.marked.markedPreviewOpen = !$store.marked.markedPreviewOpen" x-init="$watch('$store.marked.markedPreviewOpen', value => {
+                        $store.ace.decOpacity = value;
+                    })" class="side-button group">
+                    <svg class="group-hover:animate-pulse">
+                        <use href="/src/assets/sprite.svg#icon-preview"></use>
+                    </svg>
+                </button>
+            </template>
             <div class=" flex flex-col relative" x-data="{ open: false }" x-on:keydown.esc.prevent.stop="open = false"
                 x-on:click="open = !open">
                 <button @click="{ open: true }" class="side-button group">
@@ -61,6 +66,11 @@
                             <use href="/src/assets/sprite.svg#icon-server"></use>
                         </svg>
                     </button>
+                    <button class="side-button group">
+                        <svg class="group-hover:animate-pulse">
+                            <use href="/src/assets/sprite.svg#icon-save"></use>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -71,10 +81,9 @@
                 <div id="status-bar" x-data="{ message: 'No file loaded' }" class="bg-[#303030]  px-2">
                     <span class="text-white" x-text="message"></span>
                 </div>
-                <div id="language-status" x-data="{  }"
-                    class="bg-[#303030] grow flex items-center justify-end select-none px-2">
-                    <div x-data="AceStatusBar()" x-init="init()" class="flex flex-row">
-                        <span id="status-bar-ace" class="flex-row h-full self-center"></span>
+                <div id="status-bar-left" class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
+                    <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg px-2"></div>
+                    <div id="language-status" x-data="statusBar" x-init="init()" class="flex flex-row">
                         <span id="language-icon" class="text-white px-1 h-full "><img
                                 class="object-contain max-w-full max-h-7 w-auto h-auto"
                                 :src="generateIcon(languageSelected, languageSelected)"></span>
@@ -90,6 +99,18 @@
         <template x-if="menuCloseButton">
             <div x-ref="clsBtn" class="ace_optionsMenuEntry justify-center!" @click="closeSettingsMenu()">Close
                 Menu
+            </div>
+        </template>
+        <template x-if="$store.marked.markedPreviewOpen">
+            <div id="markdown-wrapper" class="resizable absolute top-0 overflow-auto right-4 bottom-8 w-2/3">
+                <div>
+                    <h1 class="text-2xl text-white text-center bg-github rounded-lg my-1"><b>Markdown Preview</b></h1>
+                </div>
+                <div id="markdown-body"
+                    class="markdown-body  bg-neutral-900 text-white rounded-lg border-l-2 border-gray-300 p-4"
+                    x-data="markedPreview">
+                    <div x-html="renderedMarkdown"></div>
+                </div>
             </div>
         </template>
     </div>
