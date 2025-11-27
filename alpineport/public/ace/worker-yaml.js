@@ -640,8 +640,8 @@ exports.Range = Range;
 });
 
 ace.define("ace/anchor",[], function(require, exports, module){"use strict";
-var oop = require("./lib/oop.js");
-var EventEmitter = require("./lib/event_emitter.js").EventEmitter;
+var oop = require("./lib/oop");
+var EventEmitter = require("./lib/event_emitter").EventEmitter;
 var Anchor = /** @class */ (function () {
     function Anchor(doc, row, column) {
         this.$onChange = this.onChange.bind(this);
@@ -750,11 +750,11 @@ exports.Anchor = Anchor;
 });
 
 ace.define("ace/document",[], function(require, exports, module){"use strict";
-var oop = require("./lib/oop.js");
-var applyDelta = require("./apply_delta.js").applyDelta;
-var EventEmitter = require("./lib/event_emitter.js").EventEmitter;
-var Range = require("./range.js").Range;
-var Anchor = require("./anchor.js").Anchor;
+var oop = require("./lib/oop");
+var applyDelta = require("./apply_delta").applyDelta;
+var EventEmitter = require("./lib/event_emitter").EventEmitter;
+var Range = require("./range").Range;
+var Anchor = require("./anchor").Anchor;
 var Document = /** @class */ (function () {
     function Document(textOrLines) {
         this.$lines = [""];
@@ -1149,7 +1149,7 @@ exports.copyArray = function (array) {
     }
     return copy;
 };
-exports.deepCopy = require("./deep_copy.js").deepCopy;
+exports.deepCopy = require("./deep_copy").deepCopy;
 exports.arrayToMap = function (arr) {
     var map = {};
     for (var i = 0; i < arr.length; i++) {
@@ -1389,8 +1389,8 @@ module.exports = yaml;
 'use strict';
 
 
-var loader = require('./js-yaml/loader.js');
-var dumper = require('./js-yaml/dumper.js');
+var loader = require('./js-yaml/loader');
+var dumper = require('./js-yaml/dumper');
 
 
 function deprecated(name) {
@@ -1400,23 +1400,23 @@ function deprecated(name) {
 }
 
 
-module.exports.Type                = require('./js-yaml/type.js');
-module.exports.Schema              = require('./js-yaml/schema.js');
-module.exports.FAILSAFE_SCHEMA     = require('./js-yaml/schema/failsafe.js');
-module.exports.JSON_SCHEMA         = require('./js-yaml/schema/json.js');
-module.exports.CORE_SCHEMA         = require('./js-yaml/schema/core.js');
-module.exports.DEFAULT_SAFE_SCHEMA = require('./js-yaml/schema/default_safe.js');
-module.exports.DEFAULT_FULL_SCHEMA = require('./js-yaml/schema/default_full.js');
+module.exports.Type                = require('./js-yaml/type');
+module.exports.Schema              = require('./js-yaml/schema');
+module.exports.FAILSAFE_SCHEMA     = require('./js-yaml/schema/failsafe');
+module.exports.JSON_SCHEMA         = require('./js-yaml/schema/json');
+module.exports.CORE_SCHEMA         = require('./js-yaml/schema/core');
+module.exports.DEFAULT_SAFE_SCHEMA = require('./js-yaml/schema/default_safe');
+module.exports.DEFAULT_FULL_SCHEMA = require('./js-yaml/schema/default_full');
 module.exports.load                = loader.load;
 module.exports.loadAll             = loader.loadAll;
 module.exports.safeLoad            = loader.safeLoad;
 module.exports.safeLoadAll         = loader.safeLoadAll;
 module.exports.dump                = dumper.dump;
 module.exports.safeDump            = dumper.safeDump;
-module.exports.YAMLException       = require('./js-yaml/exception.js');
-module.exports.MINIMAL_SCHEMA = require('./js-yaml/schema/failsafe.js');
-module.exports.SAFE_SCHEMA    = require('./js-yaml/schema/default_safe.js');
-module.exports.DEFAULT_SCHEMA = require('./js-yaml/schema/default_full.js');
+module.exports.YAMLException       = require('./js-yaml/exception');
+module.exports.MINIMAL_SCHEMA = require('./js-yaml/schema/failsafe');
+module.exports.SAFE_SCHEMA    = require('./js-yaml/schema/default_safe');
+module.exports.DEFAULT_SCHEMA = require('./js-yaml/schema/default_full');
 module.exports.scan           = deprecated('scan');
 module.exports.parse          = deprecated('parse');
 module.exports.compose        = deprecated('compose');
@@ -1486,10 +1486,10 @@ module.exports.extend         = extend;
 },{}],6:[function(require,module,exports){
 'use strict';
 
-var common              = require('./common.js');
-var YAMLException       = require('./exception.js');
-var DEFAULT_FULL_SCHEMA = require('./schema/default_full.js');
-var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe.js');
+var common              = require('./common');
+var YAMLException       = require('./exception');
+var DEFAULT_FULL_SCHEMA = require('./schema/default_full');
+var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe');
 
 var _toString       = Object.prototype.toString;
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -2227,11 +2227,11 @@ module.exports = YAMLException;
 },{}],8:[function(require,module,exports){
 'use strict';
 
-var common              = require('./common.js');
-var YAMLException       = require('./exception.js');
-var Mark                = require('./mark.js');
-var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe.js');
-var DEFAULT_FULL_SCHEMA = require('./schema/default_full.js');
+var common              = require('./common');
+var YAMLException       = require('./exception');
+var Mark                = require('./mark');
+var DEFAULT_SAFE_SCHEMA = require('./schema/default_safe');
+var DEFAULT_FULL_SCHEMA = require('./schema/default_full');
 
 
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -3751,7 +3751,7 @@ module.exports.safeLoad    = safeLoad;
 'use strict';
 
 
-var common = require('./common.js');
+var common = require('./common');
 
 
 function Mark(name, buffer, position, line, column) {
@@ -3828,9 +3828,9 @@ module.exports = Mark;
 },{"./common":5}],10:[function(require,module,exports){
 'use strict';
 
-var common        = require('./common.js');
-var YAMLException = require('./exception.js');
-var Type          = require('./type.js');
+var common        = require('./common');
+var YAMLException = require('./exception');
+var Type          = require('./type');
 
 
 function compileList(schema, name, result) {
@@ -3944,7 +3944,7 @@ var Schema = require('../schema');
 
 module.exports = new Schema({
   include: [
-    require('./json.js')
+    require('./json')
   ]
 });
 
@@ -3959,7 +3959,7 @@ var Schema = require('../schema');
 
 module.exports = Schema.DEFAULT = new Schema({
   include: [
-    require('./default_safe.js')
+    require('./default_safe')
   ],
   explicit: [
     require('../type/js/undefined'),
@@ -3979,7 +3979,7 @@ var Schema = require('../schema');
 
 module.exports = new Schema({
   include: [
-    require('./core.js')
+    require('./core')
   ],
   implicit: [
     require('../type/timestamp'),
@@ -4021,7 +4021,7 @@ var Schema = require('../schema');
 
 module.exports = new Schema({
   include: [
-    require('./failsafe.js')
+    require('./failsafe')
   ],
   implicit: [
     require('../type/null'),
@@ -4034,7 +4034,7 @@ module.exports = new Schema({
 },{"../schema":10,"../type/bool":18,"../type/float":19,"../type/int":20,"../type/null":26,"./failsafe":14}],16:[function(require,module,exports){
 'use strict';
 
-var YAMLException = require('./exception.js');
+var YAMLException = require('./exception');
 
 var TYPE_CONSTRUCTOR_OPTIONS = [
   'kind',
@@ -5771,7 +5771,7 @@ ace.define("ace/mode/yaml_worker",[], function(require, exports) {
 
 var oop = require("../lib/oop");
 var Mirror = require("../worker/mirror").Mirror;
-var lint = require("./yaml/yaml-lint.js").lint;
+var lint = require("./yaml/yaml-lint").lint;
 
 var YamlWorker = exports.YamlWorker = function(sender) {
     Mirror.call(this, sender);
