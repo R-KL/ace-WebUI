@@ -14,11 +14,7 @@
 <body x-data="AceApp()" class="h-full flex flex-col">
     <div class="grow w-full relative h-screen">
         <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[70vh]'" class="h-[96vh]">
-            <div id="editor" class="h-full w-full">
-                { var x = "All this is syntax
-                highlighted"; return x;
-                }
-            </div>
+            <div id="editor" class="h-full w-full" x-init="readFromUrl()"></div>
         </div>
         <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
             class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
@@ -66,7 +62,7 @@
                             <use href="/src/assets/sprite.svg#icon-server"></use>
                         </svg>
                     </button>
-                    <button class="side-button group">
+                    <button class="side-button group" @click="$store.ace.save = !$store.ace.save">
                         <svg class="group-hover:animate-pulse">
                             <use href="/src/assets/sprite.svg#icon-save"></use>
                         </svg>
@@ -74,7 +70,33 @@
                 </div>
             </div>
         </div>
-
+        <div x-show="$store.ace.save" id="save-dialog" class="modal">
+            <div id="modal-content"
+                class="flex  flex-col p-4 gap-4 overflow-hidden rounded-sm border border-neutral-300 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+                <button @click="() => {$store.ace.save = false}" class="hover:cursor-pointer w-min self-end"
+                    aria-label="close modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor"
+                        fill="none" stroke-width="1.4" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 class="text-xl font-bold mb-4">Save File</h2>
+                <button @click="$store.ace.isUrl = true; save()" class="bg-blue-500 text-white px-4 py-2 rounded">Save
+                    as url</button>
+                <h4 class="text-sm italic text-neutral-700">"The Save as Url" has Size Limitation and hence for longer
+                    codes please use the file download below</h4>
+                <span class="self-center">or</span>
+                <div x-data="{ filename: 'Enter here...'}">
+                    <label for="filename" class="block mb-2">Filename:</label>
+                    <input type="text" id="filename" x-model="filename"
+                        class="w-full p-2 border border-gray-300 rounded mb-4">
+                    <div class="h-min w-full flex justify-center">
+                        <button @click="alert('I will implement this download button later')"
+                            class="bg-green-500 text-white self-end px-4 py-2 rounded">Download File</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[30vh]'"
             class="absolute bottom-0 left-0 right-0 flex flex-col z-10">
             <div id="bottom-row" class="flex flex-row h-8">
@@ -85,14 +107,13 @@
                     <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg px-2"></div>
                     <div id="language-status" x-data="statusBar" x-init="init()" class="flex flex-row">
                         <span id="language-icon" class="text-white px-1 h-full "><img
-                                class="object-contain max-w-full max-h-7 w-auto h-auto"
-                                :src="generateIcon(languageSelected, languageSelected)"></span>
+                                class="object-contain max-w-full max-h-7 w-auto h-auto" :src="currentIcon"></span>
                         <span class="text-white px-1" x-text="languageSelected"></span>
                     </div>
                 </div>
             </div>
             <template x-if="$store.bottomBar.move">
-                <div x-ref="terminal" x-data="terminal" x-init="init()" class="grow h-full overflow-hidden">
+                <div x-ref="terminal" x-data="terminal" x-init="init()" class="grow h-auto overflow-hidden">
                 </div>
             </template>
         </div>

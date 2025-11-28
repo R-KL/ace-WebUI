@@ -6,6 +6,7 @@ import { Marked, marked as mkd } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js/lib/core';
 import 'highlight.js/styles/github-dark.css';
+import lz from 'lz-string';
 import { nl, ParseInput as prsin, execCommand as excc } from './terminal.js';
 import Alpine from 'alpinejs'
 window.Alpine = Alpine;
@@ -13,6 +14,8 @@ const iconCache = new Map();
 Alpine.store('ace', {
     editor: null,
     decOpacity: false,
+    isUrl: false,
+    save: false,
 });
 Alpine.store('marked', {
     markedPreviewOpen: false,
@@ -34,9 +37,6 @@ Alpine.data('AceApp', () => ({
         this.editor.on("changeMode", () => {
             this.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
             this.markDownMode();
-        });
-        document.addEventListener('acePrompts', (e) => {
-            this.acePrompts(e.detail);
         });
         excc("editor", {
             app: this,
@@ -92,6 +92,47 @@ Alpine.data('AceApp', () => ({
         const self = this;
         const clsapnd = document.getElementById("ace_settingsmenu");
     },
+    async save() {
+        if (this.$store.ace.isUrl) {
+            const userContent =this.editor.getValue();
+            const compressedCode = lz.compressToBase64(userContent);
+            const mode = this.editor.session.$modeId.replace('ace/mode/', '');
+            const theme = this.editor.getTheme().replace('ace/theme/', '');
+            const code = '?code=' + compressedCode + '&mode=' + mode + '&theme=' + theme;
+            const compressed = lz.compressToEncodedURIComponent(code);
+            console.log({compressed,compressedCode, code, mode, theme });
+            const newUrl = `${window.location.origin}${window.location.pathname}#${compressed}`;
+            try {
+                await navigator.clipboard.writeText(newUrl).then(() => {
+                    alert('URL copied to clipboard! Warning: Large content may not work properly due to URL length limitations. length of url rises along with code length');
+                    this.$store.ace.isUrl = false;
+                    this.$store.ace.save = false;
+                })
+            } catch {
+                alert("Couldnt Copy the url try this", newUrl)
+            }
+        }
+    },
+    readFromUrl() {
+        const hash = window.location.hash.slice(1);
+        if (!hash) return;
+
+        try {
+            const decoded = lz.decompressFromEncodedURIComponent(hash);
+            const [,encodedcode, mode, theme] = decoded.match(/\?code=([^&]*)&mode=([^&]*)&theme=([^&]*)/);
+            const code = lz.decompressFromBase64(encodedcode);
+            console.log({decoded,encodedcode, code, mode, theme });
+            if (decoded !== null) {
+                this.editor.setValue(code, -1);
+                this.editor.session.setMode(`ace/mode/${mode}`);
+                this.editor.setTheme(`ace/theme/${theme}`);
+            } else {
+                console.warn("Invalid or corrupted encoded content");
+            }
+        } catch (e) {
+            console.error("Failed to decompress content from URL:", e);
+        }
+    },
     markDownMode() {
         if (this.languageSelected === 'markdown') {
             this.$store.marked.previewButton = true;
@@ -101,52 +142,77 @@ Alpine.data('AceApp', () => ({
             this.$store.ace.decOpacity = false;
         }
 
-    }
+    },
 }));
 Alpine.data('statusBar', () => ({
+    currentIcon: '',
+    languageColors: {},
+
     init() {
+        // Initialize colors
         this.languageColors = {
-            javascript: '#f7df1e',
-            typescript: '#2f74c0',
-            json: '#cb3837',
-            html: '#e44d26',
-            css: '#2965f1',
-            python: '#3572a5',
-            java: '#b07219',
-            c_cpp: '#00599c',
-            markdown: '#083fa1',
-            plain_text: '#666666',
-            text: '#666666',
-            default: '#888888',
+            javascript: '#f7df1e', typescript: '#2f74c0', json: '#cb3837',
+            html: '#e44d26', css: '#2965f1', python: '#3572a5', java: '#b07219',
+            c_cpp: '#00599c', markdown: '#083fa1', plain_text: '#666666',
+            text: '#666666', default: '#888888'
+        };
+        this.$watch('languageSelected', (newVal) => {
+            this.updateIcon(newVal);
+        });
+        if (this.languageSelected) {
+            this.updateIcon(this.languageSelected);
         }
     },
-    generateIcon(key, label) {
-        if (typeof document === 'undefined') {
-            return ''
-        }
+    async updateIcon(key) {
+        if (!key) return;
         if (iconCache.has(key)) {
-            return iconCache.get(key)
+            this.currentIcon = iconCache.get(key);
+            return;
         }
+        try {
+            const dataUrl = await this.fetchIcon(key);
+            iconCache.set(key, dataUrl);
+            this.currentIcon = dataUrl;
+        } catch (e) {
+            console.warn(`Icon fetch failed for ${key}, using fallback.`);
+            const fallbackUrl = this.generateFallbackIcon(key);
+            this.currentIcon = fallbackUrl;
+        }
+    },
+    async fetchIcon(language) {
+        const response = await fetch(`/src/assets/icons/${language.toLowerCase()}.svg`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        let svgText = await response.text();
+        if (!svgText.includes('fill=')) {
+            svgText = svgText.replace('<svg ', '<svg fill="#ffffff" ');
+        }
+        const b64 = btoa(unescape(encodeURIComponent(svgText)));
+        const out = `data:image/svg+xml;base64,${b64}`;
 
-        const canvas = document.createElement('canvas')
-        canvas.width = 48
-        canvas.height = 48
-        const ctx = canvas.getContext('2d')
-        const color = this.languageColors[key] ?? this.languageColors.default
+        return out;
+    },
+    generateFallbackIcon(key) {
+        if (typeof document === 'undefined') return '';
 
-        ctx.fillStyle = color
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        const canvas = document.createElement('canvas');
+        canvas.width = 48;
+        canvas.height = 48;
+        const ctx = canvas.getContext('2d');
+        const color = this.languageColors[key] || this.languageColors.default;
 
-        ctx.fillStyle = '#ffffff'
-        ctx.font = 'bold 26px "Segoe UI", sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        const initial = label.trim().charAt(0).toUpperCase() || 'T'
-        ctx.fillText(initial, canvas.width / 2, canvas.height / 2)
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const dataUrl = canvas.toDataURL('image/png')
-        iconCache.set(key, dataUrl)
-        return dataUrl
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const initial = key.trim().charAt(0).toUpperCase() || 'T';
+        ctx.fillText(initial, canvas.width / 2, canvas.height / 2);
+
+        return canvas.toDataURL('image/png');
     }
 }));
 Alpine.data('terminal', () => ({
@@ -167,7 +233,7 @@ Alpine.data('terminal', () => ({
         this.term = term;
         term.open(container);
         term.focus();
-        term.write(nl('Welcome to Ace-WebUI'));
+        term.write(nl('Welcome to Ace-WebUI\r\n\r\nType help for more info'));
         term.onData(data => {
             const output = prsin(data);
             term.write(output);
@@ -176,7 +242,24 @@ Alpine.data('terminal', () => ({
             term.reset();
             return '';
         });
-        excc("exit",() => {
+        excc("help", () => {
+            return nl(`Available Commands:\r\n
+- help    Show this help message\r\n
+- clear    Clear the terminal\r\n
+- exit    Exit the Terminal\r\n
+\r\n
+Related the Editor:\r\n
+\r\n
+ Usage: editor [options] [arguments]\r\n
+ 
+   options:\r\n
+     - version    Print out the current version\r\n
+     - openSettings    Another way to open the terminal\r\n
+     - prompt    opens a prompt box built-in to ace\r\n
+     - :n (goto)    goto line number n. eg: :4, or :10\r\n
+`)
+        })
+        excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
             setTimeout(() => {
                 this.$store.bottomBar.move = false;
@@ -203,7 +286,10 @@ Alpine.data('markedPreview', () => ({
     },
     get renderedMarkdown() {
         const editor = Alpine.store('ace').editor;
-        return this.markedInstance.parse(editor.getValue());
+        if (editor.getValue().trim() === '') {
+            return '<p><em>No content to preview.</em></p>';
+        }
+        return this.markedInstance.parse();
     }
 }));
 Alpine.start();
