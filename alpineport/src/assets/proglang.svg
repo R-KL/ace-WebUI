@@ -403,11 +403,6 @@
             <path
                 d="M22.27 19.385H1.73A1.73 1.73 0 010 17.655V6.345a1.73 1.73 0 011.73-1.73h20.54A1.73 1.73 0 0124 6.345v11.308a1.73 1.73 0 01-1.73 1.731zM5.769 15.923v-4.5l2.308 2.885 2.307-2.885v4.5h2.308V8.078h-2.308l-2.307 2.885-2.308-2.885H3.46v7.847zM21.232 12h-2.309V8.077h-2.307V12h-2.308l3.461 4.039z" />
         </symbol>
-        <symbol id="Mask" viewBox="0 0 24 24">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-            <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
-        </symbol>
         <symbol id="MATLAB" viewBox="0 0 128 128">
             <defs>
                 <linearGradient id="matlab-original-a" gradientUnits="userSpaceOnUse" x1="16.803" y1="16.631"
