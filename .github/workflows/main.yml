@@ -3,7 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ["alpha"]  # Deploy only when alpha is updated
-
+defaults:
+  run:
+    working-directory: ./alpineport
 permissions:
   contents: read
   pages: write
@@ -24,7 +26,7 @@ jobs:
         run: npm install
 
       - name: Build Vite project
-        run: vite build
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
