@@ -1,14 +1,6 @@
 import './style.css'
-import 'github-markdown-css/github-markdown.css';
-import { Terminal } from '@xterm/xterm';
-import '@xterm/xterm/css/xterm.css';
-import { Marked, marked as mkd } from 'marked';
-import { markedHighlight } from 'marked-highlight';
-import hljs from 'highlight.js/lib/core';
-import 'highlight.js/styles/github-dark.css';
-import lz from 'lz-string';
-import { nl, ParseInput as prsin, execCommand as excc } from './terminal.js';
 import Alpine from 'alpinejs'
+import lz from 'lz-string';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -16,6 +8,10 @@ Alpine.store('ace', {
     decOpacity: false,
     isUrl: false,
     save: false,
+    excc: null,
+    openfile: false,
+    isFsapi: false,
+    fileHandle: null,
 });
 Alpine.store('marked', {
     markedPreviewOpen: false,
@@ -28,9 +24,11 @@ Alpine.data('AceApp', () => ({
     menuCloseButton: false,
     languageSelected: null,
     init() {
-        this.editor = Alpine.store('ace').editor = ace.edit("editor");
+        const editor = ace.edit("editor");
+        this.editor = Alpine.raw(editor);
+        Alpine.store('ace').editor = Alpine.raw(editor);
         this.editor.setTheme("ace/theme/monokai");
-        this.editor.session.setMode("ace/mode/markdown");
+        this.editor.session.setMode("ace/mode/text");
         this.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
         this.editor.setFontSize(17);
         this.initSettingsMenu();
@@ -38,25 +36,28 @@ Alpine.data('AceApp', () => ({
             this.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
             this.markDownMode();
         });
-        excc("editor", {
-            app: this,
-            editor: this.editor,
-            version() { return "0.0.7" },
-            prompt() {
-                this.app.prompts()
-                return '';
-            },
-            openSettings() {
-                this.app.openSettingsMenu();
-                return 'opened settings menu';
-            },
-            ':'(lineNum) {
-                if (!isNaN(lineNum)) {
-                    this.editor.scrollToLine(lineNum - 1, true, true, () => { });
-                    this.editor.gotoLine(lineNum, 0, true);
+        Alpine.store('ace').excc = (excc) => {
+            excc("editor", {
+                app: this,
+                editor: this.editor,
+                version() { return "0.0.7" },
+                prompt() {
+                    this.app.prompts()
+                    return '';
+                },
+                openSettings() {
+                    this.app.openSettingsMenu();
+                    return 'opened settings menu';
+                },
+                ':'(lineNum) {
+                    if (!isNaN(lineNum)) {
+                        this.editor.scrollToLine(lineNum - 1, true, true, () => { });
+                        this.editor.gotoLine(lineNum, 0, true);
+                    }
                 }
-            }
-        });
+            });
+        }
+
     },
     initSettingsMenu() {
         const editorInstance = this.editor;
@@ -75,11 +76,51 @@ Alpine.data('AceApp', () => ({
 
         });
     },
-    prompts() {
-        const prompt = this.editor.prompt(this.editor, "Default value", {
-            placeholder: "Enter text...",
-            onAccept: (data) => console.log(data.value)
+    async openFile() {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            this.editor.setValue(content, -1);
+        };
+        if (this.$store.ace.isFsapi) {
+            const picker = await showOpenFilePicker();
+            console.log(picker);
+            if (!picker || picker.length === 0) return;
+            console.log("Opening file using File System Access API");
+            const fileHandle = picker[0];
+            this.$store.ace.fileHandle = fileHandle;
+            const file = await fileHandle.getFile();
+            if (!file) return;
+            reader.readAsText(file);
+            const modelist = ace.require("ace/ext/modelist");
+            const mode = modelist.getModeForPath(file.name).mode;
+            console.log(`Setting editor mode to: ${mode}`);
+            this.editor.session.setMode(mode);
+            console.log(fileHandle);
+            return;
+        }
+        console.log("Opening file using File Input");
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '*/*';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            reader.readAsText(file);
+            const modelist = ace.require("ace/ext/modelist");
+            const mode = modelist.getModeForPath(file.name).mode;
+            console.log(`Setting editor mode to: ${mode}`);
+            this.editor.session.setMode(mode);
+            document.body.removeChild(fileInput)
         });
+        fileInput.click();
+    },
+    prompts() {
+        prompt = ace.require("ace/ext/prompt");
+        console.log(prompt);
+        prompt.modes(this.editor);
     },
     initStatusBar() {
         const StatusBarObject = ace.require("ace/ext/statusbar").StatusBar;
@@ -88,19 +129,16 @@ Alpine.data('AceApp', () => ({
 
     openSettingsMenu() {
         this.editor.showSettingsMenu();
-        // this.menuCloseButton = true;
-        const self = this;
-        const clsapnd = document.getElementById("ace_settingsmenu");
     },
-    async save() {
+    async save(filename=null) {
         if (this.$store.ace.isUrl) {
-            const userContent =this.editor.getValue();
+            const userContent = this.editor.getValue();
             const compressedCode = lz.compressToBase64(userContent);
             const mode = this.editor.session.$modeId.replace('ace/mode/', '');
             const theme = this.editor.getTheme().replace('ace/theme/', '');
             const code = '?code=' + compressedCode + '&mode=' + mode + '&theme=' + theme;
             const compressed = lz.compressToEncodedURIComponent(code);
-            console.log({compressed,compressedCode, code, mode, theme });
+            console.log({ compressed, compressedCode, code, mode, theme });
             const newUrl = `${window.location.origin}${window.location.pathname}#${compressed}`;
             try {
                 await navigator.clipboard.writeText(newUrl).then(() => {
@@ -112,16 +150,60 @@ Alpine.data('AceApp', () => ({
                 alert("Couldnt Copy the url try this", newUrl)
             }
         }
+        if (this.$store.ace.isFsapi) {
+            if (!this.$store.ace.fileHandle) {
+                alert("No file is opened to save. Please open a file first.");
+                return;
+            }
+            try {
+                const writable = await this.$store.ace.fileHandle.createWritable();
+                await writable.write(this.editor.getValue());
+                await writable.close();
+                alert("File saved successfully using File System Access API.");
+                this.$store.ace.save = false;
+            } catch (e) {
+                console.error("Error saving file:", e);
+                alert("Failed to save the file. See console for details.");
+            }
+            return;
+        }
+        const blob = new Blob([this.editor.getValue()], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        if(!filename || filename === 'Enter here...') {
+            alert(" Using default filename: download.txt");
+        }
+        a.download = filename || 'download.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.$store.ace.save = false;
     },
     readFromUrl() {
         const hash = window.location.hash.slice(1);
         if (!hash) return;
-
+        const urlParams = new URLSearchParams(hash);
+        const url = urlParams.get('url');
+        const mode = urlParams.get('mode') || 'markdown';
+        const theme = urlParams.get('theme') || 'monokai';
+        if (url) {
+            fetch(url).then(res => res.text()).then(data => {
+                this.editor.setValue(data, -1);
+            });
+            try {
+                this.editor.session.setMode(`ace/mode/${mode}`);
+                this.editor.setTheme(`ace/theme/${theme}`);
+            }
+            catch (e) {
+                console.error("Failed to set mode or theme from URL:", e);
+            }
+            return;
+        }
         try {
             const decoded = lz.decompressFromEncodedURIComponent(hash);
-            const [,encodedcode, mode, theme] = decoded.match(/\?code=([^&]*)&mode=([^&]*)&theme=([^&]*)/);
+            const [, encodedcode, mode, theme] = decoded.match(/\?code=([^&]*)&mode=([^&]*)&theme=([^&]*)/);
             const code = lz.decompressFromBase64(encodedcode);
-            console.log({decoded,encodedcode, code, mode, theme });
+            console.log({ decoded, encodedcode, code, mode, theme });
             if (decoded !== null) {
                 this.editor.setValue(code, -1);
                 this.editor.session.setMode(`ace/mode/${mode}`);
@@ -133,8 +215,8 @@ Alpine.data('AceApp', () => ({
             console.error("Failed to decompress content from URL:", e);
         }
     },
-    markDownMode() {
-        if (this.languageSelected === 'markdown') {
+    markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
+        if (this.languageSelected === 'markdown' || this.languageSelected === 'html') {
             this.$store.marked.previewButton = true;
         } else {
             this.$store.marked.previewButton = false;
@@ -219,8 +301,11 @@ Alpine.data('terminal', () => ({
     term: null,
     initialized: false,
     bh: 0,
-    init() {
+    async init() {
         if (this.initialized) return;
+        const { Terminal } = await import('@xterm/xterm');
+        await import('@xterm/xterm/css/xterm.css');
+        const { nl, ParseInput: prsin, execCommand: excc } = await import('./terminal.js');
         this.initialized = true;
         const container = this.$refs.terminal;
         const term = new Terminal({
@@ -238,6 +323,8 @@ Alpine.data('terminal', () => ({
             const output = prsin(data);
             term.write(output);
         });
+        const aceExcc = Alpine.store('ace').excc;
+        aceExcc(excc); //passing a reference of excc
         excc("clear", () => {
             term.reset();
             return '';
@@ -270,7 +357,13 @@ Related the Editor:\r\n
 }));
 Alpine.data('markedPreview', () => ({
     markedInstance: null,
-    init() {
+    dompurify: null,
+    async init() {
+        // await import('github-markdown-css/github-markdown.css');
+        const { Marked, marked: mkd } = await import('marked');
+        const { markedHighlight } = await import('marked-highlight');
+        const hljs = (await import('highlight.js')).default;
+        this.dompurify = (await import('dompurify')).default;
         this.markedInstance = new Marked(
             markedHighlight({
                 emptyLangClass: 'hljs',
@@ -279,17 +372,27 @@ Alpine.data('markedPreview', () => ({
                     if (lang && hljs.getLanguage(lang)) {
                         return hljs.highlight(code, { language: lang }).value;
                     }
-                    return hljs.highlightAuto(code).value; // auto-detect
+                    return this.dompurify.sanitize(hljs.highlightAuto(code).value); // auto-detect
                 }
             })
         );
     },
     get renderedMarkdown() {
-        const editor = Alpine.store('ace').editor;
-        if (editor.getValue().trim() === '') {
+        const code = Alpine.store('ace').editor.getValue();
+        if (!this.markedInstance) return '<p><em>Loading preview...</em></p>';
+        if (code.trim() === '') {
             return '<p><em>No content to preview.</em></p>';
         }
-        return this.markedInstance.parse();
+        return this.dompurify.sanitize(this.markedInstance.parse(code));
+    },
+    async fetchPreviewHtml() {
+        const template = await fetch('/src/preview.html').then(res => res.text());
+        const content = this.renderedMarkdown;
+        let previewHtml = template.replace('<!-- CONTENT -->', content);
+        const blob = new Blob([previewHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
     }
+
 }));
 Alpine.start();
