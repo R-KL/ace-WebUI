@@ -16,7 +16,6 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
-
       manifest: {
         name: "Ace-WebUI",
         short_name: "acewebui",
@@ -41,7 +40,7 @@ export default defineConfig({
       },
     }),
   ],
-
+  base: './ace-WebUI/',
   build: {
     sourcemap: false,
     assetsInlineLimit: 4096,
