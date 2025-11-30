@@ -2,10 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["alpha"]  # Deploy only when alpha is updated
-defaults:
-  run:
-    working-directory: ./alpineport
+    branches: ["alpha"]
+
 permissions:
   contents: read
   pages: write
@@ -15,32 +13,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: node:20-alpine   # Use Alpine
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
+        working-directory: alpineport
 
-      - name: Build Vite project
+      - name: Build project
         run: npm run build
+        working-directory: alpineport
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist  # Vite output folder
+          path: alpineport/dist
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v4
