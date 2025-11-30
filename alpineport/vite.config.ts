@@ -40,7 +40,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: './ace-WebUI/',
+  base: '/ace-WebUI/',
   build: {
     sourcemap: false,
     assetsInlineLimit: 4096,
