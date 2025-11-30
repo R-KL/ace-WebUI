@@ -24,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Build Vite project
-        run: npm run build
+        run: vite build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
