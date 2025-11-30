@@ -262,7 +262,7 @@ Alpine.data('statusBar', () => ({
         }
     },
     async fetchIcon(language) {
-        const response = await fetch(`ace-WebUI/icons/${language.toLowerCase()}.svg`);
+        const response = await fetch(`/icons/${language.toLowerCase()}.svg`);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
