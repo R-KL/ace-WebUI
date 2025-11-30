@@ -135,10 +135,12 @@
                     <span class="text-white" x-text="message"></span>
                 </div>
                 <div id="status-bar-left" class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
-                    <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg px-2"></div>
-                    <div id="language-status" x-data="statusBar" x-init="init()" class="flex flex-row">
-                        <span id="language-icon" class="text-white px-1 h-full "><img
-                                class="object-contain max-w-full max-h-7 w-auto h-auto" :src="currentIcon"></span>
+                    <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg min-w-4 px-2 mx-2"></div>
+                    <div class="h-6 border-l border-gray-500"></div>
+                    <div id="language-status" x-data="statusBar" x-init="init()" class="flex flex-row items-center">
+                        <div id="language-icon" class="text-white mx-1 h-full  rounded-2xl "><img
+                                class="object-contain rounded-2xl w-auto h-auto min-w-7 min-h-7" :src="currentIcon"></div>
+                                <div class="h-6 border-l border-gray-500"></div>
                         <span class="text-white px-1" x-text="languageSelected"></span>
                     </div>
                 </div>
