@@ -2,8 +2,9 @@
 <html lang="en">
 
 <head>
-    <title>ACE in Action</title>
+    <title>Web Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/webp" href="favicon.webp">
     <script src="/ace/ace.js"></script>
     <script src="/ace/ext-language_tools.js"></script>
     <script src="/ace/ext-statusbar.js"></script>
@@ -20,18 +21,18 @@
             class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
             <button @click="openSettingsMenu()" class="side-button group">
                 <svg class="group-hover:animate-spin">
-                    <use href="/src/assets/sprite.svg#icon-settings"></use>
+                    <use href="sprite.svg#icon-settings"></use>
                 </svg>
             </button>
             <button @click="$store.bottomBar.move = !$store.bottomBar.move" class="side-button group">
                 <svg class="group-hover:animate-pulse">
-                    <use href="/src/assets/sprite.svg#icon-terminal"></use>
+                    <use href="sprite.svg#icon-terminal"></use>
                 </svg>
             </button>
             <template x-if="$store.marked.previewButton">
                 <button x-data="markedPreview()" @click="fetchPreviewHtml()" class="side-button group">
                     <svg class="group-hover:animate-pulse">
-                        <use href="/src/assets/sprite.svg#icon-preview"></use>
+                        <use href="sprite.svg#icon-preview"></use>
                     </svg>
                 </button>
             </template>
@@ -39,7 +40,7 @@
                 x-on:click="open = !open">
                 <button @click="{ open: true }" class="side-button group">
                     <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                        <use href="/src/assets/sprite.svg#icon-load"></use>
+                        <use href="sprite.svg#icon-load"></use>
                     </svg>
                 </button>
                 <div id="dropdown-container" class="flex flex-col" x-cloak x-show="open"
@@ -52,18 +53,18 @@
                     aria-labelledby="pm-dropdown">
                     <button class="side-button mt-2 group" @click="$store.ace.openfile = true">
                         <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                            <use href="/src/assets/sprite.svg#icon-computer"></use>
+                            <use href="sprite.svg#icon-computer"></use>
                         </svg>
                     </button>
                     <button class="side-button mt-2 group"
                     @click="alert('I will implement this later along with the backend')">
                         <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                            <use href="/src/assets/sprite.svg#icon-server"></use>
+                            <use href="sprite.svg#icon-server"></use>
                         </svg>
                     </button>
                     <button class="side-button group" @click="$store.ace.save = !$store.ace.save">
                         <svg class="group-hover:animate-pulse">
-                            <use href="/src/assets/sprite.svg#icon-save"></use>
+                            <use href="sprite.svg#icon-save"></use>
                         </svg>
                     </button>
                 </div>
@@ -138,8 +139,8 @@
                     <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg min-w-4 px-2 mx-2"></div>
                     <div class="h-6 border-l border-gray-500"></div>
                     <div id="language-status" x-data="statusBar" x-init="init()" class="flex flex-row items-center">
-                        <div id="language-icon" class="text-white mx-1 h-full  rounded-2xl "><img
-                                class="object-contain rounded-2xl w-auto h-auto min-w-7 min-h-7" :src="currentIcon"></div>
+                        <div id="language-icon" class="text-white mx-1 h-6 w-6 rounded-2xl "><img
+                                class="object-contain rounded-2xl w-full h-full" :src="currentIcon"></div>
                                 <div class="h-6 border-l border-gray-500"></div>
                         <span class="text-white px-1" x-text="languageSelected"></span>
                     </div>

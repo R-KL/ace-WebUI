@@ -1,6 +1,7 @@
 import './style.css'
 import Alpine from 'alpinejs'
 import lz from 'lz-string';
+import { Warning } from 'postcss';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -149,6 +150,7 @@ Alpine.data('AceApp', () => ({
             } catch {
                 alert("Couldnt Copy the url try this", newUrl)
             }
+            return;
         }
         if (this.$store.ace.isFsapi) {
             if (!this.$store.ace.fileHandle) {
@@ -212,7 +214,7 @@ Alpine.data('AceApp', () => ({
                 console.warn("Invalid or corrupted encoded content");
             }
         } catch (e) {
-            console.error("Failed to decompress content from URL:", e);
+            throw new Warning("Failed to decompress content from URL:", e);
         }
     },
     markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
@@ -262,11 +264,18 @@ Alpine.data('statusBar', () => ({
         }
     },
     async fetchIcon(language) {
-        const response = await fetch(`/icons/${language.toLowerCase()}.svg`);
+        const response = await fetch(`icons/${language.toLowerCase()}.svg`);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('image/svg+xml')) {
+            throw new Error('Invalid content type for SVG:', contentType);
+        }
         let svgText = await response.text();
+        if(typeof svgText !== 'string' || svgText.trim() === '') {
+            throw new Error('Empty SVG content');
+        }
         if (!svgText.includes('fill=')) {
             svgText = svgText.replace('<svg ', '<svg fill="#ffffff" ');
         }
