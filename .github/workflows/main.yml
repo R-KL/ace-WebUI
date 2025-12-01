@@ -3,16 +3,16 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ["alpha"]
+  workflow_dispatch: 
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  pages: write 
+  id-token: write 
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -20,14 +20,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
         working-directory: alpineport
 
-      - name: Build project
-        run: npm run build
+      - name: Build project with dynamic Base Path
+        run: |
+          # Dynamically extracts repo name (e.g., "Ace-WebUI")
+          REPO_NAME=$(echo ${{ github.repository }} | awk -F '/' '{print $2}')
+          # Sets VITE_BASE_PATH for the build command
+          VITE_BASE_PATH=/${REPO_NAME}/ npm run build
         working-directory: alpineport
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -37,5 +45,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
