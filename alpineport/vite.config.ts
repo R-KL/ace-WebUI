@@ -11,31 +11,6 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     svg(),
-    VitePWA({
-      registerType: 'prompt',
-      workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        sourcemap: false,
-      },
-      manifest: {
-        name: "Ace-WebUI",
-        short_name: "acewebui",
-        start_url: basePath,
-        display: "standalone",
-        background_color: "#ffffff",
-        theme_color: "#0f172a",
-        
-        icons: [
-          {src: 'custom-icon-16.png', sizes: '16x16', type: 'image/png' },
-          { src: 'custom-icon-32.png', sizes: '32x32', type: 'image/png' },
-          { src: 'custom-icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'custom-icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'custom-icon-192-maskable.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: 'custom-icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
-    }),
-
     license({
       thirdParty: {
         output: {
