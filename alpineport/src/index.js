@@ -394,7 +394,7 @@ Alpine.data('markedPreview', () => ({
         return this.markedInstance.parse(code);
     },
     async fetchPreviewHtml() {
-        const template = await fetch('src/preview.html').then(res => res.text());
+        const template = await fetch('preview.html').then(res => res.text());
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
         const blob = new Blob([previewHtml], { type: 'text/html' });

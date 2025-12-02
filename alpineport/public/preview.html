@@ -5,16 +5,21 @@
     <title>Preview</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        html {
-            background-color: #060a0f;
-        }
-
         body {
-            background-color: #0d1117;
+            background-color: #060a0f;
             color: #c9d1d9;
             font-family: Arial, sans-serif;
-            width: 210mm;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
             margin: auto;
+
+        }
+
+        #content {
+            background-color: #0d1117;
+            width: 210mm;
             padding: 2rem;
         }
 
@@ -153,13 +158,34 @@
         li {
             padding: 0.25rem;
         }
+
+        .handle {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            background-color: #ff6347;
+            z-index: 10;
+        }
+
+        .left-handle {
+            left: -4px;
+            cursor: ew-resize;
+        }
+
+        .right-handle {
+            right: -4px;
+            cursor: ew-resize;
+        }
     </style>
     <!-- STYLES -->
     <!-- SCRIPTS -->
 </head>
 
 <body>
-    <!-- CONTENT -->
+    <div id="content">
+        <!-- CONTENT -->
+    </div>
     <template id="checkbox-svg">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <title>check</title>
