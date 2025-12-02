@@ -18,9 +18,12 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
   - Load and save files directly on the server.
   - Upload files from your PC.
   - Download files to your PC.
+  - Or direct file editing ( in alpha version )
 - ⚙️ **External Configuration:** Settings managed via a simple `config.yaml` file.
 - 💅 **Modern UI:** Clean, dark-themed, responsive two-panel layout.
-
+- **Sharing Features ( alpha version ):** The ace WebUI has option to share the code has url. [for example click me](https://r-kl.github.io/ace-WebUI/#PwYw9gJgpgvAYgEQQUQIIElUGtkBcDuc+AQgEYCKAsgOwAWUqtA5gJr4DSpT7mAtgAwhUATibJqTBAEcA8qgBKAV1TswAYQDKqCAHEAntXLsArAC9aAQyzEATKko2mxUwBVF8vUW0APdACl8PWJiJgA7Wm9UHQBmBFpiGQQACSTkABYAdTS-MAAFVGJcgFUAB2jiACcNEtQAOQsWKABLXMpaaKwAZzUMzrBUfgAtJup8UwAONNRUGWN2DShcHSleNQArWjSdOBY1dAAbCgB6JKasP0VyYlp2clRcVZYrOHZ2Qfw0mygXcgydtJASVQaWMlCYAGo9AhQgA1DS5PR+Cy4NRfArINQIGHEPQFIS5FwIYyoNT8B5gTroULsEAo0zkEqUXIsGQyShkyimBD9FT8JhqCx8tQgdBODToHBNKJTJgAN06TXBJPYazGnVItQAjEwSSV0LJaDI0nFwUlvGo-H4YTJyLU-Fh+EliEUwZRaiU0rc4CEwGBaBBEAx0GlrlgpLQjvsQAA2fZwJgADVopj8gxqcCS6DWcEoYBACCmcAsIEGqHGuTWg2QwdLinm5EIyHwtE6+fG8h06AsCCw7HkxEG8g47EoTVYyHIaUo9jgejULiYFgsqF4yCwehAWHQtHk7DgLnQpHQLFq5G7YBK2JKKCY+HwqBYCeQyFCAOQTWjNtCajU5HIYH4GRNT0XgNCaBNwV3DQEwTe5iHwTVeCwXJQnBGwYXQdBKHwI41CwI4NxsFx8CkAAZHUkj8Ip41IXY-AgZBNQQJhOlImEoAyfByB-FxcgqLAdXYEkiiYOwkMEO5ZR0WhwWQOA6wTRQ1lQAAzYheGjCpjFI3J8CZJ1cGA4QMgsI5yB0EgdGmbDxn4dAMg0EA4HItZSE6aZomYVBSIkUjSIgWVNTSQYoH4WooAQaMVNYNQpHGaYVN42UVOzI5UAQKBozgbS0tlaINAqWoVNQNY0gqdA4HStRkDctJFCaBA4GQFTQnGaLiHkNIqFQO4EG8UxSFoX4tFPJC4G8KEoCKbxwxYUi0jQFwZBKTpQIGIEEBEixaD0WpnSSEp5CwXBUDAUg4R0LAGykHQmHITVKGrPsbATc4RIXVMoHwaMXEoTVpnGWgmXIDQQbUMAmH4XgmCKQZ+GiGFyBkPwHMUZcQEu0j5DkMq1hHMAMiYFpkJWphLFqaIbCKTjVqwaKMmmHRCYTNROiKNImHkIp4I0NRubSDRkEoOBamQbxSFQOB5A0DRiCwFxkFlXJ0CgbwNH4UghFQVJjFCMBKBhQZEb-KR2AsKBanvLBBiCIF0BAHUYCdgAyXhIFgEo9FwWgwFCZ3vagXhYAsXhSCaCxQhAKAgA).
+  > Note that this method encodes the entire code in url and for larger codes, the url will be ugly long,
+  >  but works for atleast 22,000 lines of code
 ## Tech Stack
 
 **Backend:**
