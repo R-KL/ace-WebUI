@@ -17,12 +17,14 @@
             margin: auto;
             padding: 2rem;
         }
+
         code {
             background-color: #161b22;
             padding: 0.2rem 0.4rem;
             border-radius: 0.3rem;
             font-family: 'Courier New', Courier, monospace;
         }
+
         h1 {
             color: #e2e6ea;
             width: 100%;
@@ -36,7 +38,7 @@
 
         h2 {
             color: #e2e6ea;
-            width: 100%;            
+            width: 100%;
             margin-top: 1rem;
             font-size: 2rem;
             margin-bottom: 1rem;
@@ -77,6 +79,7 @@
             border-bottom: 0.01rem solid #30363d;
             padding-bottom: 0.2rem;
         }
+
         h6 {
             color: #e2e6ea;
             width: 100%;
@@ -87,11 +90,13 @@
             border-bottom: 0.01rem solid #30363d;
             padding-bottom: 0.2rem;
         }
+
         hr {
             border: none;
             border-top: 0.2rem solid #30363d;
             margin: 2rem 0;
         }
+
         a {
             color: #58a6ff;
             text-decoration: none;
@@ -109,9 +114,11 @@
             padding: 0.5rem;
             text-align: left;
         }
+
         tr:nth-child(even) {
             background-color: #161b22;
         }
+
         blockquote {
             border-left: 4px solid #30363d;
             padding-left: 1rem;
@@ -129,6 +136,7 @@
             margin-right: 8px;
             vertical-align: middle;
         }
+
         pre {
             background-color: #161b22;
             padding: 1rem;
@@ -136,9 +144,12 @@
             border: 1px solid #30363d;
             overflow-x: auto;
         }
-        ul, ol {
+
+        ul,
+        ol {
             margin: 0.25rem;
         }
+
         li {
             padding: 0.25rem;
         }
@@ -149,18 +160,37 @@
 
 <body>
     <!-- CONTENT -->
+    <template id="checkbox-svg">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <title>check</title>
+            <path fill="#ffffff" d="M18.9,8.1L9,18L4.05,13.05L4.76,12.34L9,16.59L18.19,7.39L18.9,8.1Z" />
+        </svg>
+    </template>
     <script>
-        const img = new Image();
-        img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAABkW7XSAAAGiElEQVR4AezYi5EaORAG4OUi8WVyF8pFdqE4FWeylqiFWsyyzAONWq3PxZjXjNT99dZfwF9v/hEgQGAQAYE1yKCUSYDA25vA8ldAgMAwAqsD6/39/Uc5ftZjmC4VehbwH4HRBVYFVgmpH6Xh/8vxTzl+lcONAAEChwksDqw/w+p0Ov13WJU2IkCAQBFYFFhfhNXf5Vo3AgSiCiSt6xxYJZDOv0mV+/qV76bVj9euXwNPp5OwuhHyhACBowTOgfWxWf1dqgbXNbSE1YeMOwIEQghcAqv+HlV/RK9hdQ4tYRViPoogQOCTwDmwTqdTDat/y+v1/hxa5fG8XwNL824ECMQTOAdWLeuL0KpfEX+V1/1mVYEcBAh0F7gGVq2khFP9hHX5pCWsKoqDAIEwAjeBVau6hFa598mqgjiSC2hvJIG7wKrFl7Cqn7TqQwcBAgTCCHwZWGGqUwgBAgQ+CQisTxgeEiAQW2BnYMVuTnUECOQSEFi55qkbAqkFBFbq8WqOQC4BgZVrni27sTaB7gICq/sIFECAwFIBgbVUynkECHQXEFjdR6AAAvEEolYksKJORl0ECNwJCKw7Ei8QIBBVQGBFnYy6CBC4ExBYdyT7X7ACAQJtBARWG1erEiDQQEBgNUC1JAECbQQEVhtXq84ioM9DBQTWodw2I0Bgj4DA2qPnWgIEDhUQWIdy24wAgT0CfQNrT+WuJUBgOgGBNd3INUxgXAGBNe7sVE5gOgGBNd3IezVsXwL7BQTWfkMrECBwkIDAOgjaNgQI7BcQWPsNrUCAwK1As2cCqxmthQkQeLWAwHq1qPUIEGgmILCa0VqYAIFXCwisV4vuX88KBAg8EBBYD2C8TIBAPAGBFW8mKiJA4IGAwHoA42UCRwjYY52AwFrn5WwCBDoKCKyO+LYmQGCdgMBa5+VsAgQ6CgwdWB3dbE2AQAcBgdUB3ZYECGwTEFjb3FxFgEAHAYHVAd2WGwRcQqAICKyC4EaAwBgCAmuMOamSAIEiILAKghsBApEEHtcisB7beIcAgWACAivYQJRDgMBjAYH12MY7BAgEExBYwQayvxwrEMgrILDyzlZnBNIJCKx0I9UQgbwCAivvbHWWX2C6DgXWdCPXMIFxBQTWuLNTOYHpBATWdCPXMIFxBWYOrHGnpnICkwoIrEkHr20CIwoIrBGnpmYCkwoIrEkHP1vb+s0hILByzFEXBKYQEFhTjFmTBHIICKwcc9QFgSkEFgXWFBKaJEAgvIDACj8iBRIgcBEQWBcJ9wQIhBcQWOFHdHCBtiMQWEBgBR6O0ggQuBUQWLcenhEgEFhAYAUejtIItBUYb3WBNd7MVExgWgGBNe3oNU5gPAGBNd7MVExgWgGBtXn0LiRA4GgBgXW0uP0IENgsILA207mQAIGjBQTW0eL2G1FAzUEEBFaQQSiDAIHnAgLruZEzCBAIIiCwggxCGQQIPBc4IrCeV+EMAgQILBAQWAuQnEKAQAwBgRVjDqogQGCBgMBagOSU5QLOJNBSQGC11LU2AQIvFRBYL+W0GAECLQUEVktdaxPILNChN4HVAd2WBAhsExBY29xcRYBABwGB1QHdlgQIbBMQWNvc9l9lBQIEVgsIrNVkLiBAoJeAwOolb18CBFYLCKzVZC4gsFbA+a8SEFivkrQOAQLNBQRWc2IbECDwKgGB9SpJ6xAg0FxggMBqbmADAgQGERBYgwxKmQQIvL0JLH8FBAgMIyCwhhnVFIVqksC3AgLrWx5vEiAQSUBgRZqGWggQ+FZAYH3L400CBFoJbFlXYG1Rcw0BAl0EBFYXdpsSILBFQGBtUXMNAQJdBARWF/b9m1qBwIwCAmvGqeuZwKACAmvQwSmbwIwCAmvGqet5LAHVXgUE1pXCAwIEogsIrOgTUh8BAlcBgXWl8IAAgegC+QMr+gTUR4DAYgGBtZjKiQQI9BYQWL0nYH8CBBYLCKzFVE6ML6DC7AICK/uE9UcgkYDASjRMrRDILiCwsk9YfwQSCXwKrERdaYUAgZQCAivlWDVFIKeAwMo5V10RSCkgsFKO9WlTTiAwpIDAGnJsiiYwp4DAmnPuuiYwpIDAGnJsiiawXCDTmQIr0zT1QiC5gMBKPmDtEcgkILAyTVMvBJILCKwnA/Y2AQJxBARWnFmohACBJwIC6wmQtwkQiCMgsOLMQiW9BewfXkBghR+RAgkQuAgIrIuEewIEwgsIrPAjUiABAheB3wAAAP//tNWFCAAAAAZJREFUAwD6dkstWZdD9AAAAABJRU5ErkJggg=="
+        const img = document.getElementById('checkbox-svg').content.firstElementChild;
+        img.style.cursor = 'pointer';
+        const grandParent = document.querySelector('body');
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             const customCheckbox = document.createElement('div');
             customCheckbox.classList.add('custom-checkbox');
+            const cloneImg = img.cloneNode(true);
+            customCheckbox.appendChild(cloneImg);
             if (checkbox.checked) {
-                const cloneImg = img.cloneNode(true);
-                customCheckbox.appendChild(cloneImg);
-                customCheckbox.classList.add('checked');
+                cloneImg.style.opacity = '1';
+            } else {
+                cloneImg.style.opacity = '0';
             }
             checkbox.parentNode.replaceChild(customCheckbox, checkbox);
+        });
+        grandParent.addEventListener('click', (e) => {
+            if (e.target.closest('.custom-checkbox')) {
+                const checkbox = e.target.closest('.custom-checkbox').firstElementChild;
+                if (checkbox.style.opacity === '1') {
+                    checkbox.style.opacity = '0';
+                } else {
+                    checkbox.style.opacity = '1';
+                }
+            }
         });
     </script>
 

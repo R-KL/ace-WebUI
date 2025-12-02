@@ -1,7 +1,6 @@
 import './style.css'
 import Alpine from 'alpinejs'
 import lz from 'lz-string';
-import { Warning } from 'postcss';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -214,7 +213,7 @@ Alpine.data('AceApp', () => ({
                 console.warn("Invalid or corrupted encoded content");
             }
         } catch (e) {
-            throw new Warning("Failed to decompress content from URL:", e);
+                console.warn("Failed to decompress content from URL:", e);
         }
     },
     markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
@@ -392,10 +391,10 @@ Alpine.data('markedPreview', () => ({
         if (code.trim() === '') {
             return '<p><em>No content to preview.</em></p>';
         }
-        return this.dompurify.sanitize(this.markedInstance.parse(code));
+        return this.markedInstance.parse(code);
     },
     async fetchPreviewHtml() {
-        const template = await fetch('/src/preview.html').then(res => res.text());
+        const template = await fetch('src/preview.html').then(res => res.text());
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
         const blob = new Blob([previewHtml], { type: 'text/html' });
