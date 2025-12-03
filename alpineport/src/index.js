@@ -40,6 +40,15 @@ Alpine.data('AceApp', () => ({
             excc("editor", {
                 app: this,
                 editor: this.editor,
+                help() {
+                    const helpText = 
+                        'Editor Commands:\r\n' +
+                        'version - Show the current version of the editor\r\n' +
+                        'prompt - Open the prompt dialog\r\n' +
+                        'openSettings - Open the settings menu\r\n' +
+                        ':<line_number> - Go to the specified line number (e.g., :10 to go to line 10)';
+                    return helpText; 
+                },
                 version() { return "0.0.7" },
                 prompt() {
                     this.app.prompts()
@@ -338,29 +347,19 @@ Alpine.data('terminal', () => ({
             return '';
         });
         excc("help", () => {
-            return nl(`Available Commands:\r\n
-- help    Show this help message\r\n
-- clear    Clear the terminal\r\n
-- exit    Exit the Terminal\r\n
-\r\n
-Related the Editor:\r\n
-\r\n
- Usage: editor [options] [arguments]\r\n
- 
-   options:\r\n
-     - version    Print out the current version\r\n
-     - openSettings    Another way to open the terminal\r\n
-     - prompt    opens a prompt box built-in to ace\r\n
-     - :n (goto)    goto line number n. eg: :4, or :10\r\n
-`)
-        })
+            return 'Available commands:\r\n' +
+                    '   help - Show this help message\r\n' +
+                    '   clear - Clear the terminal screen\r\n' +
+                    '   exit - Exit the terminal interface\r\n' +
+                    '   editor - Access editor commands (type "editor help" for more info)';
+        });
         excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
             setTimeout(() => {
                 this.$store.bottomBar.move = false;
             }, 500);
             return '';
-        })
+        });
     },
 }));
 Alpine.data('markedPreview', () => ({

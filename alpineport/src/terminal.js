@@ -1,4 +1,3 @@
-
 let ringBuffer = [];
 let lineBuffer = '';
 let commands = {
