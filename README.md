@@ -12,10 +12,10 @@ Ace-Editor Web-UI is a full-stack web application providing a browser-based code
 All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at compile time, so deployment is as simple as copying a single file.
 
 ## To Do
-- [ ] **Add File System API**
-- [ ] **Add Terminal  Functionality**
+- [x] **Add File System API**
+- [x] **Add Terminal  Functionality**
 - [ ] **Add File Tree**
-- [ ] **Add Renderer for Markdown Files**
+- [x] **Add Renderer for Markdown Files**
 - [ ] **Maybe Add Latex and Typst Support**
 ## Tech Stack
 
