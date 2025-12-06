@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: alpineport
+        working-directory: web
 
       - name: Build project with dynamic Base Path
         run: |
@@ -32,7 +32,7 @@ jobs:
           REPO_NAME=$(echo ${{ github.repository }} | awk -F '/' '{print $2}')
           # Sets VITE_BASE_PATH for the build command
           VITE_BASE_PATH=/${REPO_NAME}/ npm run build
-        working-directory: alpineport
+        working-directory: web
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -40,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: alpineport/dist
+          path: web/dist
 
   deploy:
     needs: build
