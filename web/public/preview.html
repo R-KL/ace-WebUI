@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Preview</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background-color: #060a0f;
+            color: #c9d1d9;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: auto;
+            letter-spacing: 0.1rem;
+
+        }
+
+        #content {
+            background-color: #0d1117;
+            width: 210mm;
+            padding: 2rem;
+        }
+
+        code {
+            background-color: #161b22;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.3rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        h1 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        h2 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        h3 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        h4 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        h5 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        h6 {
+            color: #e2e6ea;
+            width: 100%;
+            margin-top: 1rem;
+            font-size: 0.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            border-bottom: 0.01rem solid #30363d;
+            padding-bottom: 0.2rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 0.2rem solid #30363d;
+            margin: 2rem 0;
+        }
+
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        table {
+            width: auto;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            border: 1px solid #c9d1d9;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #161b22;
+        }
+
+        blockquote {
+            border-left: 4px solid #30363d;
+            padding-left: 1rem;
+            color: #8b949e;
+            margin: 1rem 0;
+        }
+
+        .custom-checkbox {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            margin: 0.5rem;
+            border: 2px solid #c9d1d9;
+            border-radius: 9999px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        pre {
+            background-color: #161b22;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #30363d;
+            overflow-x: auto;
+        }
+
+        ul,
+        ol {
+            margin: 0.25rem;
+        }
+
+        li {
+            padding: 0.25rem;
+        }
+
+        .handle {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            background-color: #ff6347;
+            z-index: 10;
+        }
+
+        .left-handle {
+            left: -4px;
+            cursor: ew-resize;
+        }
+
+        .right-handle {
+            right: -4px;
+            cursor: ew-resize;
+        }
+
+        @media print {
+            body, h1, h2, h3, h4, h5, h6, #content, pre, code, blockquote,
+            tr:nth-child(even) {
+                background-color: white !important;
+                color: black !important;
+                border-color: #555 !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+                break-inside: avoid !important;
+                break-before: avoid !important;
+            }
+            table, th, td {
+                border-color: #555 !important;
+            }
+            .custom-checkbox {
+                border-color: black !important;
+            }
+            .custom-checkbox svg {
+                display: block !important;
+                visibility: visible !important;
+                fill: black !important;
+                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+            .handle {
+                display: none !important;
+            }
+        }
+    </style>
+    <script type="module" src="kicanvas.js">
+    </script>
+    <!-- STYLES -->
+    <!-- SCRIPTS -->
+</head>
+
+<body>
+    <div id="content">
+        <!-- CONTENT -->
+    </div>
+    <div id="ki-embed" style="width:100%;height:100%;">
+<kicanvas-embed src="demo.kicad_sch" controls="basic"> </kicanvas-embed>
+    </div>
+    <template id="checkbox-svg">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <title>check</title>
+            <path fill="#ffffff" d="M18.9,8.1L9,18L4.05,13.05L4.76,12.34L9,16.59L18.19,7.39L18.9,8.1Z" />
+        </svg>
+    </template>
+    <script>
+        const img = document.getElementById('checkbox-svg').content.firstElementChild;
+        img.style.cursor = 'pointer';
+        const grandParent = document.querySelector('body');
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            const customCheckbox = document.createElement('div');
+            customCheckbox.classList.add('custom-checkbox');
+            const cloneImg = img.cloneNode(true);
+            customCheckbox.appendChild(cloneImg);
+            if (checkbox.checked) {
+                cloneImg.style.opacity = '1';
+            } else {
+                cloneImg.style.opacity = '0';
+            }
+            checkbox.parentNode.replaceChild(customCheckbox, checkbox);
+        });
+        grandParent.addEventListener('click', (e) => {
+            if (e.target.closest('.custom-checkbox')) {
+                const checkbox = e.target.closest('.custom-checkbox').firstElementChild;
+                if (checkbox.style.opacity === '1') {
+                    checkbox.style.opacity = '0';
+                } else {
+                    checkbox.style.opacity = '1';
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
