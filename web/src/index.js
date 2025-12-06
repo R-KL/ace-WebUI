@@ -393,7 +393,7 @@ Alpine.data('markedPreview', () => ({
         if (code.trim() === '') {
             return '<p><em>No content to preview.</em></p>';
         }
-        return this.markedInstance.parse(code);
+        return this.dompurify.sanitize(this.markedInstance.parse(code));
     },
     get renderedHTML() {
         const code = Alpine.store('ace').editor.getValue();
@@ -406,8 +406,9 @@ Alpine.data('markedPreview', () => ({
         const template = await fetch('preview.html').then(res => res.text());
         if (this.$store.ace.languageSelected === 'html') {
             const content = this.renderedHTML;
+            const sandboxAttributes = "sandbox='allow-scripts allow-forms allow-modals allow-popups allow-presentation allow-same-origin'";
             let previewHtml = template.replace( '<!-- BODY-CONTENT -->',
-                                                `<iframe style="width:100%;
+                                                `<iframe ${sandboxAttributes} style="width:100%;
                                                 position:absolute;
                                                 top:0;
                                                 left:0;
