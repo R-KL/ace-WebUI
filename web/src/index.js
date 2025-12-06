@@ -12,6 +12,7 @@ Alpine.store('ace', {
     openfile: false,
     isFsapi: false,
     fileHandle: null,
+    languageSelected: null,
 });
 Alpine.store('marked', {
     markedPreviewOpen: false,
@@ -22,18 +23,18 @@ Alpine.store('bottomBar', {
 })
 Alpine.data('AceApp', () => ({
     menuCloseButton: false,
-    languageSelected: null,
+
     init() {
         const editor = ace.edit("editor");
         this.editor = Alpine.raw(editor);
         Alpine.store('ace').editor = Alpine.raw(editor);
         this.editor.setTheme("ace/theme/monokai");
         this.editor.session.setMode("ace/mode/text");
-        this.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
+        this.$store.ace.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
         this.editor.setFontSize(17);
         this.initSettingsMenu();
         this.editor.on("changeMode", () => {
-            this.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
+            this.$store.ace.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
             this.markDownMode();
         });
         Alpine.store('ace').excc = (excc) => {
@@ -226,7 +227,7 @@ Alpine.data('AceApp', () => ({
         }
     },
     markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
-        if (this.languageSelected === 'markdown' || this.languageSelected === 'html') {
+        if (this.$store.ace.languageSelected === 'markdown' || this.$store.ace.languageSelected === 'html') {
             this.$store.marked.previewButton = true;
         } else {
             this.$store.marked.previewButton = false;
@@ -248,11 +249,11 @@ Alpine.data('statusBar', () => ({
             c_cpp: '#00599c', markdown: '#083fa1', plain_text: '#666666',
             text: '#666666', default: '#888888'
         };
-        this.$watch('languageSelected', (newVal) => {
+        this.$watch('$store.ace.languageSelected', (newVal) => {
             this.updateIcon(newVal);
         });
-        if (this.languageSelected) {
-            this.updateIcon(this.languageSelected);
+        if (this.$store.ace.languageSelected) {
+            this.updateIcon(this.$store.ace.languageSelected);
         }
     },
     async updateIcon(key) {
@@ -367,6 +368,7 @@ Alpine.data('markedPreview', () => ({
     dompurify: null,
     async init() {
         // await import('github-markdown-css/github-markdown.css');
+        if (this.markedInstance) return;
         const self = this;
         const { Marked, marked: mkd } = await import('marked');
         const { markedHighlight } = await import('marked-highlight');
@@ -393,8 +395,30 @@ Alpine.data('markedPreview', () => ({
         }
         return this.markedInstance.parse(code);
     },
+    get renderedHTML() {
+        const code = Alpine.store('ace').editor.getValue();
+        if (code.trim() === '') {
+            return '<p><em>No content to preview.</em></p>';
+        }
+        return code;
+    },
     async fetchPreviewHtml() {
         const template = await fetch('preview.html').then(res => res.text());
+        if (this.$store.ace.languageSelected === 'html') {
+            const content = this.renderedHTML;
+            let previewHtml = template.replace( '<!-- BODY-CONTENT -->',
+                                                `<iframe style="width:100%;
+                                                position:absolute;
+                                                top:0;
+                                                left:0;
+                                                height:100%;
+                                                border:none;
+                                                background: #ffffff" srcdoc='${content.replace(/'/g, "&apos;").replace(/"/g, "&quot;")}'></iframe>`);
+            const blob = new Blob([previewHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            return;
+        }
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
         const blob = new Blob([previewHtml], { type: 'text/html' });
