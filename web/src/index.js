@@ -367,6 +367,7 @@ Alpine.data('markedPreview', () => ({
     dompurify: null,
     async init() {
         // await import('github-markdown-css/github-markdown.css');
+        const self = this;
         const { Marked, marked: mkd } = await import('marked');
         const { markedHighlight } = await import('marked-highlight');
         const hljs = (await import('highlight.js')).default;
@@ -379,7 +380,7 @@ Alpine.data('markedPreview', () => ({
                     if (lang && hljs.getLanguage(lang)) {
                         return hljs.highlight(code, { language: lang }).value;
                     }
-                    return this.dompurify.sanitize(hljs.highlightAuto(code).value); // auto-detect
+                    return self.dompurify.sanitize(hljs.highlightAuto(code).value); // auto-detect
                 }
             })
         );
