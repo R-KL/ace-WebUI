@@ -1,5 +1,5 @@
-import './style.css'
-import Alpine from 'alpinejs'
+import './style.css';
+import Alpine from 'alpinejs';
 import lz from 'lz-string';
 window.Alpine = Alpine;
 const iconCache = new Map();
