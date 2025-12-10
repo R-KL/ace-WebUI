@@ -426,6 +426,11 @@ Alpine.data('markedPreview', () => ({
         }
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
+        const highlightCss = await import ('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {
+            console.log(mod.default);
+        previewHtml = previewHtml.replace('<!-- STYLES -->','<style>' + mod.default + '</style>');
+        });
+        console.log(highlightCss);
         const blob = new Blob([previewHtml], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
