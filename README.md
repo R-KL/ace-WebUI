@@ -17,6 +17,16 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 - [ ] **Add File Tree**
 - [x] **Add Renderer for Markdown Files**
 - [ ] **Maybe Add Latex and Typst Support**
+
+## To Do Next Release
+
+- [ ] Add SSH support
+- [ ] Add add circuit rendering in markdown...
+- [ ] Add multiple tabs using the ace createEditSession function.
+- [ ] Add a few available compilers for client side code execution.
+- [ ] Add Git...integration, either using ssh or pure JS libraries.
+- [ ] User Auth and maybe code encryption using Web Crypto API.
+
 ## Tech Stack
 
 **Backend:**
