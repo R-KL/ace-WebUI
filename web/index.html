@@ -14,32 +14,29 @@
 
 </head>
 
-<body x-data="AceApp()" class="h-full flex flex-col">
+<body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
     <div class="grow w-full relative h-screen">
-        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[70vh]'" class="h-[96vh]">
+        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[69vh]'" class="h-[96vh]">
             <div id="editor" class="h-full w-full" x-init="readFromUrl()"></div>
         </div>
         <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
             class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
             <button @click="openSettingsMenu(); 
-                    $dispatch('update-msg', { msg: 'Settings menu opened' })" 
-                    class="side-button group">
+                    $dispatch('update-msg', { msg: 'Settings menu opened' })" class="side-button group">
                 <svg class="group-hover:animate-spin">
                     <use href="sprite.svg#icon-settings"></use>
                 </svg>
             </button>
             <button @click="$store.bottomBar.move = !$store.bottomBar.move; 
                     $dispatch('update-msg', { msg: $store.bottomBar.move ? 'Terminal opened' : 'Terminal closed' })"
-                    class="side-button group">
+                class="side-button group">
                 <svg class="group-hover:animate-pulse">
                     <use href="sprite.svg#icon-terminal"></use>
                 </svg>
             </button>
             <template x-if="$store.marked.previewButton">
-                <button x-data="markedPreview()" 
-                        @click="fetchPreviewHtml(); 
-                        $dispatch('update-msg', { msg: 'Opening preview in new window' })" 
-                        class="side-button group">
+                <button x-data="markedPreview()" @click="fetchPreviewHtml(); 
+                        $dispatch('update-msg', { msg: 'Opening preview in new window' })" class="side-button group">
                     <svg class="group-hover:animate-pulse">
                         <use href="sprite.svg#icon-preview"></use>
                     </svg>
@@ -95,8 +92,8 @@
                 <div id="btn-container" class="flex justify-center">
                     <button @click="$store.ace.isUrl = true; save(); 
                             $nextTick(() => $dispatch('update-msg', { msg: 'File saved as URL' }))"
-                            class="bg-blue-500 text-white px-4 py-2 rounded">
-                            Save as URL
+                        class="bg-blue-500 text-white px-4 py-2 rounded">
+                        Save as URL
                     </button>
                 </div>
                 <h4 class="text-sm italic text-neutral-700 max-w-20vw w-auto">The "Save as Url" option has <span
@@ -118,8 +115,8 @@
 
                     <div class="h-min w-full flex justify-center">
                         <button @click="save(filename);
-                                $dispatch('update-msg', { msg: 'File saved with filename: ' + filename })" class="bg-green-500 text-white px-4 py-2 rounded"
-                            x-text="btnContent"></button>
+                                $dispatch('update-msg', { msg: 'File saved with filename: ' + filename })"
+                            class="bg-green-500 text-white px-4 py-2 rounded" x-text="btnContent"></button>
                     </div>
                 </div>
             </div>
@@ -149,32 +146,36 @@
                 </div>
             </div>
         </div>
-        <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[30vh]'"
+        <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[31vh]'"
             class="absolute bottom-0 left-0 right-0 flex flex-col z-10">
             <div id="bottom-row" class="flex flex-row h-8">
-                <div id="status-bar"
-                     x-data="{
+                <div id="status-bar" x-data="{
                         message: '',
                         oldMsg: '', 
                         timer: null,
                         flash(msg, timeout = 3000) { 
                             if (this.timer) { 
-                                clearTimeout(this.timer);
-                                this.message = this.oldMsg;}
+                                clearTimeout(this.timer); 
+                                this.message = this.oldMsg; 
+                                this.timer = null;
+                            }
                             if  (timeout > 0) {
                                 this.oldMsg = this.message;
                                 this.message = msg; 
                                 this.timer = setTimeout(() => { 
                                     this.message = this.oldMsg; 
+                                    this.timer = null;
                                 },timeout);
                             }
                             else {
                                 this.message = msg;
                             }
                         } 
-                     }" 
-                     class="bg-[#303030]  px-2">
-                    <span @update-msg.window="flash($event.detail.msg,$event.detail.timeout || 3000)" class="text-white" x-text="message"></span>
+                     }" class="bg-[#303030]  px-2">
+                    <span @update-msg.window="
+                        flash($event.detail.msg,
+                              $event.detail.timeout === 0 ? 0 : 3000)" class="text-white" x-text="message">
+                    </span>
                 </div>
                 <div id="status-bar-left" class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
                     <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg min-w-4 px-2 mx-2"></div>
@@ -188,11 +189,11 @@
                 </div>
             </div>
             <template x-if="$store.bottomBar.move">
-                <div x-ref="terminal" x-data="terminal" x-init="init()" class="grow h-auto overflow-hidden">
+                <div x-ref="terminal" x-data="terminal" class="grow overflow-hidden">
                 </div>
             </template>
         </div>
-            <!-- template x-if="$store.marked.markedPreviewOpen">
+        <!-- template x-if="$store.marked.markedPreviewOpen">
             <div id="markdown-wrapper" class="resizable absolute top-0 overflow-auto right-4 bottom-8 w-2/3">
                 <div>
                     <h1 class="text-2xl text-white text-center bg-github rounded-lg my-1"><b>Markdown Preview</b></h1>
@@ -204,7 +205,7 @@
                 </div>
             </div>
         < /template -->
-        </div>
+    </div>
 </body>
 
 </html>

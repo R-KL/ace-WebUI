@@ -8,7 +8,7 @@ let commands = {
  * @param {string|object} option - The function to execute or a string response.
  */
 function execCommand(command, obj) {
-        for (const key in obj) {
+    for (const key in obj) {
         if (typeof obj[key] === "function") {
             obj[key] = obj[key].bind(obj);
         }

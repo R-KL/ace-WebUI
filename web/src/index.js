@@ -43,13 +43,13 @@ Alpine.data('AceApp', () => ({
                 app: this,
                 editor: this.editor,
                 help() {
-                    const helpText = 
+                    const helpText =
                         'Editor Commands:\r\n' +
                         'version - Show the current version of the editor\r\n' +
                         'prompt - Open the prompt dialog\r\n' +
                         'openSettings - Open the settings menu\r\n' +
                         ':<line_number> - Go to the specified line number (e.g., :10 to go to line 10)';
-                    return helpText; 
+                    return helpText;
                 },
                 version() { return "0.0.7" },
                 prompt() {
@@ -94,21 +94,30 @@ Alpine.data('AceApp', () => ({
             this.editor.setValue(content, -1);
         };
         if (this.$store.ace.isFsapi) {
-            const picker = await showOpenFilePicker();
-            console.log(picker);
-            if (!picker || picker.length === 0) return;
-            console.log("Opening file using File System Access API");
-            const fileHandle = picker[0];
-            this.$store.ace.fileHandle = fileHandle;
-            const file = await fileHandle.getFile();
-            if (!file) return;
-            reader.readAsText(file);
-            const modelist = ace.require("ace/ext/modelist");
-            const mode = modelist.getModeForPath(file.name).mode;
-            console.log(`Setting editor mode to: ${mode}`);
-            this.editor.session.setMode(mode);
-            console.log(fileHandle);
-            return;
+            try {
+                const picker = await showOpenFilePicker();
+                console.log(picker);
+
+                if (!picker || picker.length === 0) return;
+                console.log("Opening file using File System Access API");
+                const fileHandle = picker[0];
+                this.$store.ace.fileHandle = fileHandle;
+                const file = await fileHandle.getFile();
+                if (!file) return;
+                this.$dispatch('update-msg', { msg: `${file.name}`, timeout: 0 });
+                reader.readAsText(file);
+                const modelist = ace.require("ace/ext/modelist");
+                const mode = modelist.getModeForPath(file.name).mode;
+                console.log(`Setting editor mode to: ${mode}`);
+                this.editor.session.setMode(mode);
+                console.log(fileHandle);
+                return;
+            }
+            catch (e) {
+                console.error("File open cancelled or failed:", e);
+                this.$dispatch('update-msg', { msg: "File open cancelled or failed.", timeout: 4000 });
+                return;
+            }
         }
         console.log("Opening file using File Input");
         const fileInput = document.createElement('input');
@@ -119,6 +128,7 @@ Alpine.data('AceApp', () => ({
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
+            this.$dispatch('update-msg', { msg: ` ${file.name}`, timeout: 0 });
             reader.readAsText(file);
             const modelist = ace.require("ace/ext/modelist");
             const mode = modelist.getModeForPath(file.name).mode;
@@ -141,7 +151,7 @@ Alpine.data('AceApp', () => ({
     openSettingsMenu() {
         this.editor.showSettingsMenu();
     },
-    async save(filename=null) {
+    async save(filename = null) {
         if (this.$store.ace.isUrl) {
             const userContent = this.editor.getValue();
             const compressedCode = lz.compressToBase64(userContent);
@@ -150,6 +160,7 @@ Alpine.data('AceApp', () => ({
             const code = '?code=' + compressedCode + '&mode=' + mode + '&theme=' + theme;
             const compressed = lz.compressToEncodedURIComponent(code);
             console.log({ compressed, compressedCode, code, mode, theme });
+            this.$dispatch('update-msg', { msg: `URL Generated  for sharing...`, timeout: 2000 });
             const newUrl = `${window.location.origin}${window.location.pathname}#${compressed}`;
             try {
                 await navigator.clipboard.writeText(newUrl).then(() => {
@@ -164,14 +175,14 @@ Alpine.data('AceApp', () => ({
         }
         if (this.$store.ace.isFsapi) {
             if (!this.$store.ace.fileHandle) {
-                alert("No file is opened to save. Please open a file first.");
+                this.$dispatch('update-msg', { msg: `Save aborted: No file opened.`, timeout: 3000 });
                 return;
             }
             try {
                 const writable = await this.$store.ace.fileHandle.createWritable();
                 await writable.write(this.editor.getValue());
                 await writable.close();
-                alert("File saved successfully using File System Access API.");
+                this.$dispatch('update-msg', { msg: "File saved successfully using File System Access API.", timeout: 3000 });
                 this.$store.ace.save = false;
             } catch (e) {
                 console.error("Error saving file:", e);
@@ -183,8 +194,8 @@ Alpine.data('AceApp', () => ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        if(!filename || filename === 'Enter here...') {
-            alert(" Using default filename: download.txt");
+        if (!filename || filename === 'Enter here...') {
+            this.$dispatch('update-msg', { msg: " Using default filename: download.txt", timeout: 3000 });
         }
         a.download = filename || 'download.txt';
         a.click();
@@ -194,23 +205,6 @@ Alpine.data('AceApp', () => ({
     readFromUrl() {
         const hash = window.location.hash.slice(1);
         if (!hash) return;
-        const urlParams = new URLSearchParams(hash);
-        const url = urlParams.get('url');
-        const mode = urlParams.get('mode') || 'markdown';
-        const theme = urlParams.get('theme') || 'monokai';
-        if (url) {
-            fetch(url).then(res => res.text()).then(data => {
-                this.editor.setValue(data, -1);
-            });
-            try {
-                this.editor.session.setMode(`ace/mode/${mode}`);
-                this.editor.setTheme(`ace/theme/${theme}`);
-            }
-            catch (e) {
-                console.error("Failed to set mode or theme from URL:", e);
-            }
-            return;
-        }
         try {
             const decoded = lz.decompressFromEncodedURIComponent(hash);
             const [, encodedcode, mode, theme] = decoded.match(/\?code=([^&]*)&mode=([^&]*)&theme=([^&]*)/);
@@ -220,11 +214,14 @@ Alpine.data('AceApp', () => ({
                 this.editor.setValue(code, -1);
                 this.editor.session.setMode(`ace/mode/${mode}`);
                 this.editor.setTheme(`ace/theme/${theme}`);
+                setTimeout(() => {
+                    this.$dispatch('update-msg', { msg: `Decompresing #${hash.slice(0, 20)}...`, timeout: 4000 });
+                }, 200);
             } else {
                 console.warn("Invalid or corrupted encoded content");
             }
         } catch (e) {
-                console.warn("Failed to decompress content from URL:", e);
+            console.warn("Failed to decompress content from URL:", e);
         }
     },
     markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
@@ -282,7 +279,7 @@ Alpine.data('statusBar', () => ({
             throw new Error('Invalid content type for SVG:', contentType);
         }
         let svgText = await response.text();
-        if(typeof svgText !== 'string' || svgText.trim() === '') {
+        if (typeof svgText !== 'string' || svgText.trim() === '') {
             throw new Error('Empty SVG content');
         }
         if (!svgText.includes('fill=')) {
@@ -318,10 +315,11 @@ Alpine.data('statusBar', () => ({
 Alpine.data('terminal', () => ({
     term: null,
     initialized: false,
-    bh: 0,
     async init() {
         if (this.initialized) return;
         const { Terminal } = await import('@xterm/xterm');
+        const { FitAddon } = await import('@xterm/addon-fit');
+        const fitAddon = new FitAddon();
         await import('@xterm/xterm/css/xterm.css');
         const { nl, ParseInput: prsin, execCommand: excc } = await import('./terminal.js');
         this.initialized = true;
@@ -334,7 +332,9 @@ Alpine.data('terminal', () => ({
             }
         });
         this.term = term;
+        term.loadAddon(fitAddon);
         term.open(container);
+        fitAddon.fit();
         term.focus();
         term.write(nl('Welcome to Ace-WebUI\r\n\r\nType help for more info'));
         term.onData(data => {
@@ -343,16 +343,20 @@ Alpine.data('terminal', () => ({
         });
         const aceExcc = Alpine.store('ace').excc;
         aceExcc(excc); //passing a reference of excc
+        excc("init", () => {
+            return '\x1bcWelcome to Ace-WebUI\r\n\r\nType help for more info';
+        })
         excc("clear", () => {
-            term.reset();
-            return '';
+            return '\x1bc';
         });
+
         excc("help", () => {
             return 'Available commands:\r\n' +
-                    '   help - Show this help message\r\n' +
-                    '   clear - Clear the terminal screen\r\n' +
-                    '   exit - Exit the terminal interface\r\n' +
-                    '   editor - Access editor commands (type "editor help" for more info)';
+                '   help - Show this help message\r\n' +
+                '   init - Initialize the terminal\r\n' +
+                '   clear - Clear the terminal screen\r\n' +
+                '   exit - Exit the terminal interface\r\n' +
+                '   editor - Access editor commands (type "editor help" for more info)';
         });
         excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
@@ -407,8 +411,8 @@ Alpine.data('markedPreview', () => ({
         if (this.$store.ace.languageSelected === 'html') {
             const content = this.renderedHTML;
             const sandboxAttributes = "sandbox='allow-scripts allow-forms allow-modals allow-popups allow-presentation allow-same-origin'";
-            let previewHtml = template.replace( '<!-- BODY-CONTENT -->',
-                                                `<iframe ${sandboxAttributes} style="width:100%;
+            let previewHtml = template.replace('<!-- BODY-CONTENT -->',
+                `<iframe ${sandboxAttributes} style="width:100%;
                                                 position:absolute;
                                                 top:0;
                                                 left:0;
