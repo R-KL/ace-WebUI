@@ -171,10 +171,10 @@
                                 this.message = msg;
                             }
                         } 
-                     }" class="bg-[#303030]  px-2">
+                     }" class="bg-[#303030]  px-2 flex items-center">
                     <span @update-msg.window="
                         flash($event.detail.msg,
-                              $event.detail.timeout === 0 ? 0 : 3000)" class="text-white" x-text="message">
+                              $event.detail.timeout === 0 ? 0 : 3000)" class="text-white text-center" x-text="message">
                     </span>
                 </div>
                 <div id="status-bar-left" class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
