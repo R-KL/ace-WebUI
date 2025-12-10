@@ -35,6 +35,7 @@ Alpine.data('AceApp', () => ({
         this.initSettingsMenu();
         this.editor.on("changeMode", () => {
             this.$store.ace.languageSelected = this.editor.session.$modeId.replace('ace/mode/', '');
+            this.$dispatch('update-msg', { msg: `Using language "${this.$store.ace.languageSelected}"` });
             this.markDownMode();
         });
         Alpine.store('ace').excc = (excc) => {
@@ -240,7 +241,6 @@ Alpine.data('AceApp', () => ({
 Alpine.data('statusBar', () => ({
     currentIcon: '',
     languageColors: {},
-
     init() {
         // Initialize colors
         this.languageColors = {
@@ -313,7 +313,7 @@ Alpine.data('statusBar', () => ({
         ctx.fillText(initial, canvas.width / 2, canvas.height / 2);
 
         return canvas.toDataURL('image/png');
-    }
+    },
 }));
 Alpine.data('terminal', () => ({
     term: null,
