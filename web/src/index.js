@@ -21,6 +21,133 @@ Alpine.store('marked', {
 Alpine.store('bottomBar', {
     move: false,
 })
+Alpine.store('opfs', {
+    currentDir: '/',
+    opfs: null,
+    initialized: false,
+    async init() {
+        this.opfs = await import('./opfs.js');
+        this.initialized = true;
+    },
+    getPath(name) {
+        if (name.startsWith('/')) return name;
+        const base = this.currentDir.endsWith('/') ? this.currentDir : this.currentDir + '/';
+        return (base + name).replace(/\/+/g, '/');
+    },
+    async ls() {
+        const entries = await this.opfs.listDir(this.currentDir);
+        return entries;
+    },
+    async cd(path) {
+        let segments = this.currentDir.split('/').filter(Boolean);
+        path.split('/').filter(Boolean).forEach(part => {
+            if (part === '..') segments.pop();
+            else if (part !== '.') segments.push(part);
+        });
+        
+        const target = '/' + segments.join('/');
+        const exists = await this.opfs.dirExists(target);
+        if (exists) {
+            this.currentDir = target;
+        } else {
+            console.warn("Path not found:", target);
+        }
+    },
+
+    async mkdir(name = 'NewFolder') {
+        const fullPath = this.getPath(name);
+        await this.opfs.mkdir(fullPath);
+        console.log("Created directory at:", fullPath);
+    },
+
+    async writeFile(name = 'NewFile.txt', content = '') {
+        const fullPath = this.getPath(name);
+        await this.opfs.writeFile(fullPath, content);
+        console.log("File saved to:", fullPath);
+    },
+    async getTreeJson(dirHandle = null, currentPath = '') {
+        // If no handle provided, start at root
+        if (!dirHandle) {
+            dirHandle = await this.opfs.getRoot();
+        }
+
+        const children = [];
+        
+        // Iterate over all entries in this directory
+        for await (const [name, handle] of dirHandle.entries()) {
+            const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
+            
+            const node = {
+                name: name,
+                kind: handle.kind, // 'file' or 'directory'
+                path: fullPath,
+            };
+
+            if (handle.kind === 'directory') {
+                // Recursively build children for directories
+                node.children = await this.getTreeJson(handle, fullPath);
+            }
+
+            children.push(node);
+        }
+
+        // Optional: Sort folders first, then files
+        return children.sort((a, b) => {
+            if (a.kind === b.kind) return a.name.localeCompare(b.name);
+            return a.kind === 'directory' ? -1 : 1;
+        });
+    },
+    
+async drawOPFSFileTree(container) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
+        // 1. Generate the JSON structure from actual OPFS data
+        // We wrap it in a root object if your filetree.js expects a single root node
+        const children = await this.getTreeJson();
+        
+        const treeJson = {
+            name: 'root',
+            kind: 'directory',
+            path: '/',
+            children: children
+        };
+        console.log("Generated OPFS file tree JSON:", treeJson);
+        console.log("Container element:", container);
+        // 2. Import your renderer
+        const { createFileTreeElement } = await import('./filetree.js');
+        // 3. Clear previous tree (important!)
+        container.innerHTML = ''; 
+
+        // 4. Create and append the new tree
+        const treeElement = createFileTreeElement(treeJson, {
+            // Your existing event handlers...
+            onFileClick: async (node) => {
+                // Use node.path directly from our generated JSON
+                const file = await this.opfs.readFile(node.path);
+                
+                // Ace Editor Logic
+                Alpine.store('ace').editor.setValue(file, -1);
+                const modelist = ace.require("ace/ext/modelist");
+                const mode = modelist.getModeForPath(node.name).mode;
+                Alpine.store('ace').editor.session.setMode(mode);
+            },
+            onDirectoryClick: async (node) => {
+                 // Update currentDir state, but maybe don't redraw 
+                 // the whole tree if you just want to expand/collapse UI
+                 this.cd(node.path);
+            },
+            isInitiallyExpanded: (node) => {
+                // Check if this node is part of the current path
+                if (node.path === '/') return true;
+                return this.currentDir.startsWith(node.path);
+            }
+        });
+
+        container.appendChild(treeElement);
+    }
+});
 Alpine.data('AceApp', () => ({
     menuCloseButton: false,
 

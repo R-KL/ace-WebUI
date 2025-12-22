@@ -68,6 +68,12 @@
                             <use href="sprite.svg#icon-server"></use>
                         </svg>
                     </button>
+                    <button class="side-button group" @click="$store.opfs.drawOPFSFileTree($refs.fileTreeContainer);
+                            $dispatch('update-msg', { msg: 'File created in OPFS: ml5.js' })">
+                        <svg class="h-6 w-6 text-current group-hover:animate-pulse">
+                            <use href="sprite.svg#icon-file-tree"></use>
+                        </svg>
+                    </button>
                     <button class="side-button group" @click="$store.ace.save = !$store.ace.save">
                         <svg class="group-hover:animate-pulse">
                             <use href="sprite.svg#icon-save"></use>
@@ -193,18 +199,9 @@
                 </div>
             </template>
         </div>
-        <!-- template x-if="$store.marked.markedPreviewOpen">
-            <div id="markdown-wrapper" class="resizable absolute top-0 overflow-auto right-4 bottom-8 w-2/3">
-                <div>
-                    <h1 class="text-2xl text-white text-center bg-github rounded-lg my-1"><b>Markdown Preview</b></h1>
-                </div>
-                <div id="markdown-body"
-                    class="markdown-body  bg-neutral-900 text-white rounded-lg border-l-2 border-gray-300 p-4"
-                    x-data="markedPreview">
-                    <div x-html="renderedMarkdown"></div>
-                </div>
-            </div>
-        < /template -->
+        <template x-show="$store.opfs.initialized" id="file-tree">
+            <div id="file-tree-container" x-ref="fileTreeContainer" class="fixed left-0 top-0 bottom-0 right-auto w-64"></div>
+        </template>
     </div>
 </body>
 
