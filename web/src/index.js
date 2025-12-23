@@ -17,6 +17,7 @@ Alpine.store('ace', {
 Alpine.store('marked', {
     markedPreviewOpen: false,
     previewButton: false,
+    ack: false,
 });
 Alpine.store('bottomBar', {
     move: false,
@@ -407,23 +408,19 @@ Alpine.data('markedPreview', () => ({
         return code;
     },
     async fetchPreviewHtml() {
-        const template = await fetch('preview.html').then(res => res.text());
         if (this.$store.ace.languageSelected === 'html') {
             const content = this.renderedHTML;
-            const sandboxAttributes = "sandbox='allow-scripts allow-forms allow-modals allow-popups allow-presentation allow-same-origin'";
-            let previewHtml = template.replace('<!-- BODY-CONTENT -->',
-                `<iframe ${sandboxAttributes} style="width:100%;
-                                                position:absolute;
-                                                top:0;
-                                                left:0;
-                                                height:100%;
-                                                border:none;
-                                                background: #ffffff" srcdoc='${content.replace(/'/g, "&apos;").replace(/"/g, "&quot;")}'></iframe>`);
-            const blob = new Blob([previewHtml], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
+            const BlobContent = new Blob([content], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(BlobContent);
+            if (!this.$store.marked.ack) {
+            this.$store.marked.ack = confirm("Beware: This preview renders and executes all HTML, CSS, and JavaScript code directly in the browser. \n\n"+
+                "Ensure that the content is from a trusted source to avoid potential security risks. Do not run random code on internet!\n\n"+
+                "This prompt will only appear once per session.");
+            }
+            this.$store.marked.ack ? window.open(blobUrl, '_blank') : null; 
             return;
         }
+        const template = await fetch('preview.html').then(res => res.text());
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
         const highlightCss = await import ('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {

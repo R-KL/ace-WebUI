@@ -36,7 +36,7 @@
             </button>
             <template x-if="$store.marked.previewButton">
                 <button x-data="markedPreview()" @click="fetchPreviewHtml(); 
-                        $dispatch('update-msg', { msg: 'Opening preview in new window' })" class="side-button group">
+                        $dispatch('update-msg', { msg: $store.marked.ack ? 'Opening preview in new window' : 'Preview cancelled' })" class="side-button group">
                     <svg class="group-hover:animate-pulse">
                         <use href="sprite.svg#icon-preview"></use>
                     </svg>
