@@ -1,215 +1,141 @@
+/* filetree.js implementation
+using HTML5 Detail and Summary Tag... no more div hell hehe (thanks UnoCSS for the idea)
 
-/**
- * File tree renderer.
- *
- * Accepts multiple JSON shapes, for example:
- * - { type: 'directory', name: 'root', children: [...] }
- * - { kind: 'directory', name: 'root', children: [...] }
- * - { name: 'root', children: [...] } // inferred directory
- */
-
-const DEFAULT_EXTENSION_TO_LANGUAGE = {
-	js: 'javascript',
-	jsx: 'javascript',
-	mjs: 'javascript',
-	cjs: 'javascript',
-	ts: 'typescript',
-	tsx: 'typescript',
-	json: 'json',
-	html: 'html',
-	htm: 'html',
-	css: 'css',
-	md: 'markdown',
-	markdown: 'markdown',
-	py: 'python',
-	rs: 'rust',
-	toml: 'toml',
-	yml: 'yaml',
-	yaml: 'yaml',
-	xml: 'xml',
-	svg: 'svg',
-	sql: 'sql',
-	sh: 'powershell',
-	ps1: 'powershell',
+for compatibility The input json structure is the same has bowser OPFS
+obj={
+		"name": "any_name",
+		"kind": "directory" | "file",
+		"path": "/path/to/any_name",
+		"children": [obj_1,obj_2,obj_3], 
+	}
+*/
+let container = null;
+let fileTree = {children: []};
+let pathHistory = {
+	current: "/",
+	history: ["/"],
+	index: 0
 };
-
-function normalizeNode(node) {
-	if (!node || typeof node !== 'object') {
-		return { kind: 'file', name: 'unknown', children: undefined, meta: {} };
-	}
-
-	const rawKind = node.kind || node.type;
-	const hasChildren = Array.isArray(node.children);
-	const kind = rawKind === 'directory' || hasChildren ? 'directory' : 'file';
-	const name = typeof node.name === 'string' && node.name.trim() ? node.name : 'unknown';
-
-	return {
-		kind,
-		name,
-		children: hasChildren ? node.children : undefined,
-		meta: node,
-	};
-}
-
-function getExtension(fileName) {
-	const idx = fileName.lastIndexOf('.');
-	if (idx === -1) return '';
-	return fileName.slice(idx + 1).toLowerCase();
-}
-
-function defaultLanguageForNode(node, extensionToLanguage) {
-	if (node.kind !== 'file') return 'text';
-	const ext = getExtension(node.name);
-	if (!ext) return 'text';
-	return extensionToLanguage[ext] || ext || 'text';
-}
-
-function el(tag, className, attrs) {
-	const element = document.createElement(tag);
-	if (className) element.className = className;
-	if (attrs) {
-		for (const [k, v] of Object.entries(attrs)) {
-			if (v === undefined || v === null) continue;
-			if (k === 'text') element.textContent = String(v);
-			else if (k === 'html') element.innerHTML = String(v);
-			else element.setAttribute(k, String(v));
+let currentPath = "/";
+let icon_g = false;
+/**
+ * Render the file tree structure inside the global container
+ * @param {object} node - The current node to render (default is the root fileTree).
+ * @param {HTMLElement} parentElement - The parent HTML element to append the rendered nodes to (default is the global container).
+ * @requires clear() to be called before each rendering
+ * @returns {void}
+ */
+function render(node = fileTree, parentElement = container) {
+	if(typeof parentElement === "string") {
+		try {
+			parentElement = document.getElementById(parentElement);
+		} catch {
+			console.warn("cannot get element with id:", parentElement);
+			console.log("defaulting to container 'file-tree'");
+			try {
+				parentElement = document.getElementById("file-tree");
+			} catch {
+				console.warn("cannot get file-tree")
+				return;
+			}
 		}
 	}
-	return element;
-}
-
-/**
- * Create a DOM element (root <ul>) containing the file tree.
- *
- * @param {object} treeJson input JSON describing a directory/file tree.
- * @param {object} [options]
- * @param {boolean} [options.showIcons=true]
- * @param {string} [options.iconBasePath='icons'] e.g. 'icons' (served from /public/icons)
- * @param {Record<string,string>} [options.extensionToLanguage]
- * @param {(node: any, path: string) => void} [options.onFileClick]
- * @param {(node: any, path: string) => void} [options.onDirectoryClick]
- * @param {(node: any, path: string) => string|null|undefined} [options.iconResolver]
- * @param {(node: any, path: string) => boolean} [options.isInitiallyExpanded]
- * @returns {HTMLElement}
- */
-export function createFileTreeElement(treeJson, options = {}) {
-	const {
-		showIcons = true,
-		iconBasePath = 'icons',
-		extensionToLanguage = DEFAULT_EXTENSION_TO_LANGUAGE,
-		onFileClick,
-		onDirectoryClick,
-		iconResolver,
-		isInitiallyExpanded,
-	} = options;
-
-	const rootNode = normalizeNode(treeJson);
-
-	const root = el('ul', 'select-none text-neutral-200 text-sm', { role: 'tree' });
-
-	const build = (rawNode, parentPath) => {
-		const node = normalizeNode(rawNode);
-		const path = parentPath ? `${parentPath}/${node.name}` : node.name;
-		const li = el('li', 'leading-6', { role: 'treeitem' });
-
-		const row = el(
-			'div',
-			'flex items-center gap-2 px-2 rounded hover:bg-neutral-800 cursor-pointer',
-		);
-
-		const isDir = node.kind === 'directory';
-		const disclosure = el(
-			'span',
-			'inline-flex w-4 justify-center text-neutral-400',
-			{ 'aria-hidden': 'true', text: isDir ? '▸' : '' }
-		);
-
-		const iconWrap = el('span', 'inline-flex w-4 h-4 items-center justify-center');
-		if (showIcons) {
-			let iconName = null;
-			if (typeof iconResolver === 'function') {
-				iconName = iconResolver(node.meta, path);
-			} else if (!isDir) {
-				iconName = defaultLanguageForNode(node, extensionToLanguage);
-			} else {
-				iconName = 'space';
+	for (const item of node.children || []) {
+		if (item.kind === "directory") {
+			const details = document.createElement("details");
+			details.className = "border-l border-neutral-700 ml cursor-pointer";
+			const summary = document.createElement("summary");
+			summary.textContent = "🗀" + item.name;
+			summary.dataset.path = item.path;
+			summary.dataset.kind = "directory";
+			details.appendChild(summary);
+			if (item.children && item.children.length > 0) {
+				render({ children: item.children }, details);
 			}
-
-			if (iconName) {
-				const img = el('img', 'w-4 h-4 object-contain', {
-					src: `${iconBasePath}/${String(iconName).toLowerCase()}.svg`,
-					alt: iconName,
-					loading: 'lazy',
-				});
-				img.addEventListener('error', () => {
-					img.remove();
-				}, { once: true });
-				iconWrap.appendChild(img);
-			}
+			parentElement.appendChild(details);
 		}
-
-		const label = el('span', 'truncate', { text: node.name });
-		row.appendChild(disclosure);
-		row.appendChild(iconWrap);
-		row.appendChild(label);
-		li.appendChild(row);
-
-		if (isDir) {
-			const children = Array.isArray(node.children) ? node.children : [];
-			const ul = el('ul', 'ml-4 border-l border-neutral-800 pl-2', { role: 'group' });
-
-			const expanded =
-				typeof isInitiallyExpanded === 'function'
-					? !!isInitiallyExpanded(node.meta, path)
-					: parentPath === '' || parentPath == null; // expand root by default
-
-			ul.hidden = !expanded;
-			disclosure.textContent = expanded ? '▾' : '▸';
-
-			for (const child of children) {
-				ul.appendChild(build(child, path));
-			}
-
-			const toggle = () => {
-				ul.hidden = !ul.hidden;
-				disclosure.textContent = ul.hidden ? '▸' : '▾';
-			};
-
-			row.addEventListener('click', (e) => {
-				e.preventDefault();
-				toggle();
-				if (typeof onDirectoryClick === 'function') onDirectoryClick(node.meta, path);
-			});
-
-			li.appendChild(ul);
-		} else {
-			row.addEventListener('click', (e) => {
-				e.preventDefault();
-				if (typeof onFileClick === 'function') onFileClick(node.meta, path);
-			});
+		else if (item.kind === "file") {
+			const fileElement = document.createElement("div");
+			fileElement.innerText = "🖹" + item.name;
+			fileElement.dataset.path = item.path;
+			fileElement.dataset.kind = "file";
+			fileElement.className = "ml-4 cursor-pointer";
+			parentElement.appendChild(fileElement);
 		}
-
-		return li;
-	};
-
-	root.appendChild(build(rootNode.meta, ''));
-	return root;
+	}
 }
-
 /**
- * Render a tree into a container element.
- *
- * @param {HTMLElement|string} container element or CSS selector
- * @param {object} treeJson
- * @param {object} [options]
- * @returns {HTMLElement} root tree element
+ * Clear the file tree container ( needs to be done before each rendring manually)
+ * @param container - The HTML element  that holds the file-tree ( defaults to "file-tree")
+ * @return {void} 
  */
-export function renderFileTree(container, treeJson, options = {}) {
-	const host = typeof container === 'string' ? document.querySelector(container) : container;
-	if (!host) throw new Error('renderFileTree: container not found');
-
-	const treeEl = createFileTreeElement(treeJson, options);
-	host.innerHTML = '';
-	host.appendChild(treeEl);
-	return treeEl;
+function ftClear(container=null) {
+	if (!container) {
+		try {
+			const ft = document.getElementById("file-tree");
+			container = ft;
+		} catch {
+			console.warn("cannot get file-tree")
+			return;
+		}
+	}
+	container.innerHTML = "";
 }
+/**
+ * Initialize the file tree...By default start from root "/"
+ * @param {string | HTMLElement} id - The HTML element or its ID (has a string) where the file tree will be rendered.
+ * @param {function(string,string)} callback - The callback function to be executed when a file is double clicked. Arguments passed <path,kind>
+ * 											 - path: The path of the double-clicked file or directory.
+ *											 - kind: The kind of the item ("file" or "directory").
+ * @param {boolean} icon - Add custom icons to files and folders ? ( need to give the icons first using iconCallback)
+ * @returns {void}
+ */
+function init(id=null, callback, icon = false) {
+	if (id instanceof HTMLElement) {
+		container = id;
+	}
+	else if (id) {
+		try {
+			container = document.getElementById(id);
+		} catch {
+			console.warn("cannot get file-tree with id:", id)
+			return;
+		}	
+	}
+	else {
+		try {
+			container = document.getElementById("file-tree");
+		} catch {
+			console.warn("cannot get file-tree with id: file-tree")
+			return;
+		}
+	}
+	icon_g = icon;
+	container.innerHTML = "";
+	render(fileTree, container);
+	container.addEventListener("click", (e) => {
+		console.log("CLICK event fired")
+		const target = e.target.closest("[data-path]");
+		if (!target) return;
+		const path = target.dataset.path;
+		if (path === currentPath) return;
+		if (pathHistory.current !== currentPath) {
+			pathHistory.history = pathHistory.history.slice(0, pathHistory.index + 1);
+			pathHistory.history.push(currentPath);
+			pathHistory.index++;
+		}
+		currentPath = path;
+	})
+	container.addEventListener("dblclick", (e) => {
+		const el = e.target.closest("[data-path]");
+		if (!el) return;
+
+		const path = el.dataset.path;
+		const kind = el.dataset.kind;
+		if (!path && !kind) return;
+		callback(path,kind);
+	});
+
+}
+export { render, init, ftClear };
+

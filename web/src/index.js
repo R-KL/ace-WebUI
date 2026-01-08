@@ -10,7 +10,7 @@ Alpine.store('ace', {
     save: false,
     excc: null,
     openfile: false,
-    isFsapi: false,
+    openMode: 'fileinput',
     fileHandle: null,
     languageSelected: null,
 });
@@ -23,8 +23,10 @@ Alpine.store('bottomBar', {
 })
 Alpine.store('opfs', {
     currentDir: '/',
+    path: '',
     opfs: null,
     initialized: false,
+    ftjs: null,
     async init() {
         this.opfs = await import('./opfs.js');
         this.initialized = true;
@@ -44,7 +46,7 @@ Alpine.store('opfs', {
             if (part === '..') segments.pop();
             else if (part !== '.') segments.push(part);
         });
-        
+
         const target = '/' + segments.join('/');
         const exists = await this.opfs.dirExists(target);
         if (exists) {
@@ -59,11 +61,24 @@ Alpine.store('opfs', {
         await this.opfs.mkdir(fullPath);
         console.log("Created directory at:", fullPath);
     },
-
+    async touch(path, name = null, content = '') {
+        const fullPath = this.getPath(path) + '/' + (name || 'NewFile.txt');
+        await this.opfs.writeFile(fullPath, content);
+        console.log("Created file at:", fullPath);
+    },
     async writeFile(name = 'NewFile.txt', content = '') {
         const fullPath = this.getPath(name);
         await this.opfs.writeFile(fullPath, content);
         console.log("File saved to:", fullPath);
+    },
+    async readFile(path = null, name) {
+        if (!path) {
+            const fullPath = this.getPath(name)
+            path = fullPath;
+        }
+        const content = await this.opfs.readFile(path);
+        return content;
+
     },
     async getTreeJson(dirHandle = null, currentPath = '') {
         // If no handle provided, start at root
@@ -72,11 +87,11 @@ Alpine.store('opfs', {
         }
 
         const children = [];
-        
+
         // Iterate over all entries in this directory
         for await (const [name, handle] of dirHandle.entries()) {
             const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
-            
+
             const node = {
                 name: name,
                 kind: handle.kind, // 'file' or 'directory'
@@ -97,8 +112,8 @@ Alpine.store('opfs', {
             return a.kind === 'directory' ? -1 : 1;
         });
     },
-    
-async drawOPFSFileTree(container) {
+
+    async drawOPFSFileTree(container = null) {
         if (!this.initialized) {
             await this.init();
         }
@@ -106,7 +121,7 @@ async drawOPFSFileTree(container) {
         // 1. Generate the JSON structure from actual OPFS data
         // We wrap it in a root object if your filetree.js expects a single root node
         const children = await this.getTreeJson();
-        
+
         const treeJson = {
             name: 'root',
             kind: 'directory',
@@ -116,38 +131,39 @@ async drawOPFSFileTree(container) {
         console.log("Generated OPFS file tree JSON:", treeJson);
         console.log("Container element:", container);
         // 2. Import your renderer
-        const { createFileTreeElement } = await import('./filetree.js');
-        // 3. Clear previous tree (important!)
-        container.innerHTML = ''; 
-
-        // 4. Create and append the new tree
-        const treeElement = createFileTreeElement(treeJson, {
-            // Your existing event handlers...
-            onFileClick: async (node) => {
-                // Use node.path directly from our generated JSON
-                const file = await this.opfs.readFile(node.path);
-                
-                // Ace Editor Logic
-                Alpine.store('ace').editor.setValue(file, -1);
-                const modelist = ace.require("ace/ext/modelist");
-                const mode = modelist.getModeForPath(node.name).mode;
-                Alpine.store('ace').editor.session.setMode(mode);
-            },
-            onDirectoryClick: async (node) => {
-                 // Update currentDir state, but maybe don't redraw 
-                 // the whole tree if you just want to expand/collapse UI
-                 this.cd(node.path);
-            },
-            isInitiallyExpanded: (node) => {
-                // Check if this node is part of the current path
-                if (node.path === '/') return true;
-                return this.currentDir.startsWith(node.path);
+        try {
+            if (!this.ftjs) {
+                this.ftjs = await import('./filetree.js');
+                console.log("accquired filetree.js")
             }
-        });
+        }
+        catch (e) {
+            console.error("Failed to load filetree.js:", e);
+            return;
+        }
+        if (!container) container = document.getElementById('file-tree');
+        this.ftjs.init(container, this.onDblClick.bind(this), true);
+        this.ftjs.ftClear();
+        this.ftjs.render(treeJson, container);
 
-        container.appendChild(treeElement);
+    },
+    async onDblClick(path) {
+        window.dispatchEvent(new CustomEvent('update-msg',{ detail: { msg: `[OPFS] Opening file: ${path}` },bubbles: true}));
+        let content = await this.readFile(path);
+        Alpine.store('ace').editor.setValue(content, -1);
+        Alpine.store('ace').editor.session.setMode(ace.require("ace/ext/modelist").getModeForPath(path).mode);
+        Alpine.store('ace').openMode = "opfs";
+        this.currentDir = path.substring(0, path.lastIndexOf('/'));
+        this.path = path;
     }
 });
+Alpine.store('ft', {
+    move: false,
+    open() {
+        this.move = !this.move;
+        //const ft = document.getElementById("file-tree-container");
+    }
+})
 Alpine.data('AceApp', () => ({
     menuCloseButton: false,
 
@@ -170,13 +186,13 @@ Alpine.data('AceApp', () => ({
                 app: this,
                 editor: this.editor,
                 help() {
-                    const helpText = 
+                    const helpText =
                         'Editor Commands:\r\n' +
                         'version - Show the current version of the editor\r\n' +
                         'prompt - Open the prompt dialog\r\n' +
                         'openSettings - Open the settings menu\r\n' +
                         ':<line_number> - Go to the specified line number (e.g., :10 to go to line 10)';
-                    return helpText; 
+                    return helpText;
                 },
                 version() { return "0.0.7" },
                 prompt() {
@@ -220,7 +236,7 @@ Alpine.data('AceApp', () => ({
             const content = e.target.result;
             this.editor.setValue(content, -1);
         };
-        if (this.$store.ace.isFsapi) {
+        if (this.$store.ace.openMode === 'fsapi') {
             const picker = await showOpenFilePicker();
             console.log(picker);
             if (!picker || picker.length === 0) return;
@@ -268,7 +284,7 @@ Alpine.data('AceApp', () => ({
     openSettingsMenu() {
         this.editor.showSettingsMenu();
     },
-    async save(filename=null) {
+    async save(filename = null) {
         if (this.$store.ace.isUrl) {
             const userContent = this.editor.getValue();
             const compressedCode = lz.compressToBase64(userContent);
@@ -289,9 +305,15 @@ Alpine.data('AceApp', () => ({
             }
             return;
         }
-        if (this.$store.ace.isFsapi) {
+        if (this.$store.ace.openMode === 'opfs') {
+            await Alpine.store('opfs').writeFile(Alpine.store('opfs').path, this.editor.getValue());
+            this.$dispatch('update-msg', { msg: `File saved to OPFS as ${Alpine.store('opfs').path}` });
+            this.$store.ace.save = false;
+            return;
+        }
+        if (this.$store.ace.openMode === 'fsapi') {
             if (!this.$store.ace.fileHandle) {
-                alert("No file is opened to save. Please open a file first.");
+                this.$dispatch('update-msg', { msg: "No file is opened to save. Please open a file first." });
                 return;
             }
             try {
@@ -310,7 +332,7 @@ Alpine.data('AceApp', () => ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        if(!filename || filename === 'Enter here...') {
+        if (!filename || filename === 'Enter here...') {
             alert(" Using default filename: download.txt");
         }
         a.download = filename || 'download.txt';
@@ -351,7 +373,7 @@ Alpine.data('AceApp', () => ({
                 console.warn("Invalid or corrupted encoded content");
             }
         } catch (e) {
-                console.warn("Failed to decompress content from URL:", e);
+            console.warn("Failed to decompress content from URL:", e);
         }
     },
     markDownMode() { // this includes both markdown and html since hey they both can use the marked preview
@@ -409,7 +431,7 @@ Alpine.data('statusBar', () => ({
             throw new Error('Invalid content type for SVG:', contentType);
         }
         let svgText = await response.text();
-        if(typeof svgText !== 'string' || svgText.trim() === '') {
+        if (typeof svgText !== 'string' || svgText.trim() === '') {
             throw new Error('Empty SVG content');
         }
         if (!svgText.includes('fill=')) {
@@ -476,10 +498,10 @@ Alpine.data('terminal', () => ({
         });
         excc("help", () => {
             return 'Available commands:\r\n' +
-                    '   help - Show this help message\r\n' +
-                    '   clear - Clear the terminal screen\r\n' +
-                    '   exit - Exit the terminal interface\r\n' +
-                    '   editor - Access editor commands (type "editor help" for more info)';
+                '   help - Show this help message\r\n' +
+                '   clear - Clear the terminal screen\r\n' +
+                '   exit - Exit the terminal interface\r\n' +
+                '   editor - Access editor commands (type "editor help" for more info)';
         });
         excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
@@ -534,8 +556,8 @@ Alpine.data('markedPreview', () => ({
         if (this.$store.ace.languageSelected === 'html') {
             const content = this.renderedHTML;
             const sandboxAttributes = "sandbox='allow-scripts allow-forms allow-modals allow-popups allow-presentation allow-same-origin'";
-            let previewHtml = template.replace( '<!-- BODY-CONTENT -->',
-                                                `<iframe ${sandboxAttributes} style="width:100%;
+            let previewHtml = template.replace('<!-- BODY-CONTENT -->',
+                `<iframe ${sandboxAttributes} style="width:100%;
                                                 position:absolute;
                                                 top:0;
                                                 left:0;

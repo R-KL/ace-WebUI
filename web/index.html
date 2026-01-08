@@ -16,7 +16,7 @@
 
 <body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
     <div class="grow w-full relative h-screen">
-        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[69vh]'" class="h-[96vh]">
+        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[69vh]' || $store.ft.move && 'ml-[14vw]'" class="h-[96vh]">
             <div id="editor" class="h-full w-full" x-init="readFromUrl()"></div>
         </div>
         <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
@@ -68,8 +68,7 @@
                             <use href="sprite.svg#icon-server"></use>
                         </svg>
                     </button>
-                    <button class="side-button group" @click="$store.opfs.drawOPFSFileTree($refs.fileTreeContainer);
-                            $dispatch('update-msg', { msg: 'File created in OPFS: ml5.js' })">
+                    <button class="side-button group" @click="$store.ft.open();$nextTick(() => $store.opfs.drawOPFSFileTree());">
                         <svg class="h-6 w-6 text-current group-hover:animate-pulse">
                             <use href="sprite.svg#icon-file-tree"></use>
                         </svg>
@@ -109,10 +108,10 @@
                         longer and ugly url</span> </h4>
                 <span class="self-center">or</span>
                 <div x-data="{ filename: 'Enter here...', btnContent: 'Download File' }"
-                    x-effect="$store.ace.isFsapi ? btnContent = 'Save File Back': btnContent = 'Download File'">
-                    <div x-show="!$store.ace.isFsapi" class="mb-4">
+                    x-effect="$store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back': $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
+                    <div x-show="$store.ace.openMode === 'fileinput'" class="mb-4">
                         <label for="filename" class="block mb-2">Filename:</label>
-                        <input x-show="!$store.ace.isFsapi" type="text" id="filename" x-model="filename"
+                        <input type="text" id="filename" x-model="filename"
                             class="w-full p-2 border border-gray-300 rounded ">
                         <h4 class="text-sm italic text-neutral-700"> Please do not forget to enter
                             <span class="text-neutral-500">the file extension (eg .txt, .py...) of your file</span>
@@ -121,7 +120,7 @@
 
                     <div class="h-min w-full flex justify-center">
                         <button @click="save(filename);
-                                $dispatch('update-msg', { msg: 'File saved with filename: ' + filename })"
+                            $store.ace.openMode !== 'opfs' ? $dispatch('update-msg', { msg: 'File saved with filename: ' + filename }): null"
                             class="bg-green-500 text-white px-4 py-2 rounded" x-text="btnContent"></button>
                     </div>
                 </div>
@@ -140,9 +139,9 @@
                 </button>
                 <h2 class="text-xl font-bold mb-4 text-center">Open File</h2>
                 <div class="grid grid-cols-2 gap-2">
-                    <button @click="$store.ace.isFsapi = false; openFile()"
+                    <button @click="$store.ace.openMode = 'fileinput'; openFile()"
                         class="bg-blue-500 text-white px-4 py-2 rounded">Open using File Input</button>
-                    <button @click="$store.ace.isFsapi = true; openFile()"
+                    <button @click="$store.ace.openMode = 'fsapi'; openFile()"
                         class="bg-green-500 text-white px-4 py-2 rounded">Open using File System Access API</button>
                     <h4 class="col-span-2 text-sm italic text-neutral-700">The <span class="text-neutral-500">File
                             System Access API </span> may not be supported in all browsers. Also cannot open sensitive
@@ -153,29 +152,35 @@
             </div>
         </div>
         <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[31vh]'"
-            class="absolute bottom-0 left-0 right-0 flex flex-col z-10">
+            class="absolute bottom-0 left-0 right-0 flex flex-col z-15">
             <div id="bottom-row" class="flex flex-row h-8">
                 <div id="status-bar" x-data="{
                         message: '',
                         oldMsg: '', 
                         timer: null,
-                        flash(msg, timeout = 3000) { 
-                            if (this.timer) { 
-                                clearTimeout(this.timer); 
-                                this.message = this.oldMsg; 
-                                this.timer = null;
+                        strtTime: 0,
+                        timeout: 0,
+                        queue: [],
+                        timeoutQueue: [],
+                        flash(msg, timeout = 3000) {
+                            if (this.timer) {
+                                this.queue.push({ msg, timeout });
+                                return;
                             }
-                            if  (timeout > 0) {
-                                this.oldMsg = this.message;
-                                this.message = msg; 
-                                this.timer = setTimeout(() => { 
-                                    this.message = this.oldMsg; 
-                                    this.timer = null;
-                                },timeout);
-                            }
-                            else {
+                            this.oldMsg = this.message; 
+                            this.message = msg;
+                            if (timeout === 0) {
                                 this.message = msg;
+                                return;
                             }
+                            this.timer = setTimeout(() => {
+                                this.message = this.oldMsg;
+                                this.timer = null;
+                                if (this.queue.length > 0) {
+                                    const next = this.queue.shift();
+                                    this.flash(next.msg, next.timeout);
+                                }
+                            }, timeout);
                         } 
                      }" class="bg-[#303030]  px-2 flex items-center">
                     <span @update-msg.window="
@@ -199,9 +204,10 @@
                 </div>
             </template>
         </div>
-        <template x-show="$store.opfs.initialized" id="file-tree">
-            <div id="file-tree-container" x-ref="fileTreeContainer" class="fixed left-0 top-0 bottom-0 right-auto w-64"></div>
-        </template>
+            <div id="file-tree-container" x-show="$store.ft.move" class="flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
+                <div class="flex w-full"><button @click="$store.ft.open()" class="ml-auto cursor-pointer">🗙</button></div>
+                <div id="file-tree" class="h-max w-full"></div>
+            </div>
     </div>
 </body>
 

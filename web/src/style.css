@@ -115,3 +115,7 @@
 .status-bar-ace {
     @apply bg-[#1e1e1e] text-white  grow items-center px-1 ;
 }
+#file-tree div:hover, 
+#file-tree summary:hover {
+    background-color: #333;
+}
