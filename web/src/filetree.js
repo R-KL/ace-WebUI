@@ -43,7 +43,7 @@ function render(node = fileTree, parentElement = container) {
 	for (const item of node.children || []) {
 		if (item.kind === "directory") {
 			const details = document.createElement("details");
-			details.className = "border-l border-neutral-700 ml cursor-pointer";
+			details.className = "border-l ml-4 mb-2 border-neutral-700 cursor-pointer";
 			const summary = document.createElement("summary");
 			summary.textContent = "🗀" + item.name;
 			summary.dataset.path = item.path;
@@ -59,7 +59,7 @@ function render(node = fileTree, parentElement = container) {
 			fileElement.innerText = "🖹" + item.name;
 			fileElement.dataset.path = item.path;
 			fileElement.dataset.kind = "file";
-			fileElement.className = "ml-4 cursor-pointer";
+			fileElement.className = "ml-4 mb-2 cursor-pointer";
 			parentElement.appendChild(fileElement);
 		}
 	}

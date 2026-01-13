@@ -16,7 +16,7 @@
 
 <body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
     <div class="grow w-full relative h-screen">
-        <div id="editor-wrapper" :class="$store.bottomBar.move && 'h-[69vh]' || $store.ft.move && 'ml-[14vw]'" class="h-[96vh]">
+        <div id="editor-wrapper" :class="{ 'h-[calc(100%-31vh)]': $store.bottomBar.move, 'h-[calc(100%-4vh)]': !$store.bottomBar.move, 'ml-[14vw]': $store.ft.move }" class="w-auto transition-all duration-300">
             <div id="editor" class="h-full w-full" x-init="readFromUrl()"></div>
         </div>
         <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
@@ -151,9 +151,9 @@
                 </div>
             </div>
         </div>
-        <div id="bottom-bar" :class="$store.bottomBar.move && 'h-[31vh]'"
-            class="absolute bottom-0 left-0 right-0 flex flex-col z-15">
-            <div id="bottom-row" class="flex flex-row h-8">
+        <div id="bottom-bar" :class="{'h-[31vh]': $store.bottomBar.move}"
+            class="absolute bottom-0 left-0 right-0 flex flex-col z-15 transition-all duration-300">
+            <div id="bottom-row" class="flex flex-row h-8 transition-all duration-300" :class="{'ml-[14vw]': $store.ft.move}">
                 <div id="status-bar" x-data="{
                         message: '',
                         oldMsg: '', 
@@ -200,11 +200,11 @@
                 </div>
             </div>
             <template x-if="$store.bottomBar.move">
-                <div x-ref="terminal" x-data="terminal" class="grow overflow-hidden">
+                <div x-ref="terminal" x-data="terminal" class="overflow-hidden transition-all duration-300" :class="{'ml-[14vw]': $store.ft.move}">
                 </div>
             </template>
         </div>
-            <div id="file-tree-container" x-show="$store.ft.move" class="flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
+            <div id="file-tree-container" x-show="$store.ft.move" class="flex flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
                 <div class="flex w-full"><button @click="$store.ft.open()" class="ml-auto cursor-pointer">🗙</button></div>
                 <div id="file-tree" class="h-max w-full"></div>
             </div>

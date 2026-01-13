@@ -1,6 +1,7 @@
 import './style.css';
 import Alpine from 'alpinejs';
 import lz from 'lz-string';
+import { mkdir } from './opfs.js';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -36,8 +37,9 @@ Alpine.store('opfs', {
         const base = this.currentDir.endsWith('/') ? this.currentDir : this.currentDir + '/';
         return (base + name).replace(/\/+/g, '/');
     },
-    async ls() {
-        const entries = await this.opfs.listDir(this.currentDir);
+    async ls(path=null) {
+        if (!path) path = this.currentDir;
+        const entries = await this.opfs.listDir(path);
         return entries;
     },
     async cd(path) {
@@ -61,17 +63,31 @@ Alpine.store('opfs', {
         await this.opfs.mkdir(fullPath);
         console.log("Created directory at:", fullPath);
     },
-    async touch(path, name = null, content = '') {
+    async touch(path=this.currentDir, name = null, content = '') {
         const fullPath = this.getPath(path) + '/' + (name || 'NewFile.txt');
         await this.opfs.writeFile(fullPath, content);
         console.log("Created file at:", fullPath);
+    },
+    async rm(path, recursive = false) {
+        const fullPath = this.getPath(path);
+        try {
+            if (await this.opfs.dirExists(fullPath)) {
+                await this.opfs.deleteDir(fullPath, recursive);
+                console.log("Deleted directory at:", fullPath);
+            } else {
+                await this.opfs.deleteFile(fullPath);
+                console.log("Deleted file at:", fullPath);
+            }
+        } catch(e) {
+            console.warn("[FS] Error: " + e);
+        }
     },
     async writeFile(name = 'NewFile.txt', content = '') {
         const fullPath = this.getPath(name);
         await this.opfs.writeFile(fullPath, content);
         console.log("File saved to:", fullPath);
     },
-    async readFile(path = null, name) {
+    async readFile(path = null, name = null) {
         if (!path) {
             const fullPath = this.getPath(name)
             path = fullPath;
@@ -112,7 +128,49 @@ Alpine.store('opfs', {
             return a.kind === 'directory' ? -1 : 1;
         });
     },
-
+    exec(excc) {
+        const store = Alpine.store('opfs');
+        excc("fs",{
+            async help() {
+                return "\r\nfs is a crude implementation of Linux file system commands for OPFS\r\n"+
+                "Available commands:\r\n"+
+                '   fs cd <path> - Change directory to <path>\r\n'+
+                '   fs ls [path] - List files in [path] or current directory\r\n'+
+                '   fs mkdir <name> - Create a new directory with <name>\r\n'+
+                '   fs rm <path> [-r] - Remove file or directory at <path>, use -r for recursive delete\r\n'+
+                '   fs touch [path] [name] - Create a new empty file with [name] in [path] or current directory\r\n';
+            },
+            async cd(path) {
+                await store.cd(path);
+                return path;   
+            },
+            async ls(path) {
+                const entries = await store.ls(path);
+                if (!entries || entries.length === 0) return 'Empty directory';
+                return entries
+                .map(item => {
+                    const icon = item.kind === 'directory' ? '📁' : '📄';
+                    return `${icon} ${item.name}`;
+                })
+                .join('\r\n'); 
+            },
+            async mkdir(name) {
+                await store.mkdir(name);
+                return name;
+            },
+            async rm(path,r) {
+                if(!path) return;
+                if(r === '-r') r = true;
+                else r = false;
+                await store.rm(path,r);
+                return path + " removed";
+            },
+            async touch(path,name=null,content='') {
+                await store.touch(path,name,content);
+                return name ? name : 'NewFile.txt';
+            }
+        });
+    }, 
     async drawOPFSFileTree(container = null) {
         if (!this.initialized) {
             await this.init();
@@ -466,18 +524,23 @@ Alpine.data('statusBar', () => ({
 }));
 Alpine.data('terminal', () => ({
     term: null,
+    fitAddon: null,
     initialized: false,
     bh: 0,
     async init() {
         if (this.initialized) return;
-        const { Terminal } = await import('@xterm/xterm');
+        const [{ Terminal }, { FitAddon }] = await Promise.all([
+            import('@xterm/xterm'),
+            import('@xterm/addon-fit')
+        ]);
+        this.fitAddon = new FitAddon();
         await import('@xterm/xterm/css/xterm.css');
         const { nl, ParseInput: prsin, execCommand: excc } = await import('./terminal.js');
         this.initialized = true;
         const container = this.$refs.terminal;
         const term = new Terminal({
             cursorBlink: true,
-            overflow: true,
+            scrollback: 1000,
             theme: {
                 background: '#000000',
             }
@@ -485,13 +548,23 @@ Alpine.data('terminal', () => ({
         this.term = term;
         term.open(container);
         term.focus();
+        term.loadAddon(this.fitAddon);
+        setTimeout(() => {
+            if (this.fitAddon) {
+                this.fitAddon.fit();
+                this.term.scrollToBottom();
+                this.term.focus();
+            }
+        }, 400);
         term.write(nl('Welcome to Ace-WebUI\r\n\r\nType help for more info'));
-        term.onData(data => {
-            const output = prsin(data);
+        term.onData(async data => {
+            const output = await prsin(data);
             term.write(output);
         });
         const aceExcc = Alpine.store('ace').excc;
+        const fsExcc = Alpine.store('opfs').exec;
         aceExcc(excc); //passing a reference of excc
+        fsExcc(excc); //passing a refernce of excc
         excc("clear", () => {
             term.reset();
             return '';
@@ -501,7 +574,8 @@ Alpine.data('terminal', () => ({
                 '   help - Show this help message\r\n' +
                 '   clear - Clear the terminal screen\r\n' +
                 '   exit - Exit the terminal interface\r\n' +
-                '   editor - Access editor commands (type "editor help" for more info)';
+                '   editor - Access editor commands (type "editor help" for more info)\r\n'+
+                '   fs - Access OPFS file system commands (type "fs help" for more info)\r\n';
         });
         excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
