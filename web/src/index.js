@@ -534,9 +534,9 @@ Alpine.data('terminal', () => ({
             }
         });
         this.term = term;
-        term.loadAddon(fitAddon);
+        term.loadAddon(this.fitAddon);
         term.open(container);
-        fitAddon.fit();
+        this.fitAddon.fit();
         term.focus();
         term.loadAddon(this.fitAddon);
         setTimeout(() => {
