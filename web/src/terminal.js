@@ -32,7 +32,7 @@ function ln(input) {
  * @param {string} data - The input character or string to parse.
  * @returns {string} The updated output string.
  */
-function ParseInput(data) {
+async function ParseInput(data) {
     let output = '';
     lineBuffer += data;
     if (data === '\x03') { // Ctrl+C
@@ -53,11 +53,12 @@ function ParseInput(data) {
     if (ringBuffer.length > 100) { ringBuffer.shift(); }
     if (data === '\r' || data === '\n') {
         const input = lineBuffer.trim();
-        const tokens = input.split(/\s+/);
+        const tokens = input.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
 
         const cmd = tokens[0];
         const sub = tokens[1];
-        const arg = tokens.slice(2).join(" ");
+        let arg = tokens[2] ? tokens[2].replace(/^['"]|['"]$/g, '') : "";
+        const extra = tokens[3] || "";
 
         const entry = commands[cmd];
         let result = "";
@@ -67,7 +68,7 @@ function ParseInput(data) {
 
         } else if (typeof entry === "function") {
             // Simple function command
-            result = entry(arg);
+            result = await entry(arg);
 
         } else if (typeof entry === "object") {
             // Object-style command
@@ -76,7 +77,7 @@ function ParseInput(data) {
             } else {
                 const fn = entry[sub];
                 if (typeof fn === "function") {
-                    result = fn.call(entry, arg);
+                    result = await fn.call(entry, arg, extra);
                 } else {
                     result = fn;
                 }

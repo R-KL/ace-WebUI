@@ -1,6 +1,7 @@
 import './style.css';
 import Alpine from 'alpinejs';
 import lz from 'lz-string';
+import { mkdir } from './opfs.js';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -10,7 +11,7 @@ Alpine.store('ace', {
     save: false,
     excc: null,
     openfile: false,
-    isFsapi: false,
+    openMode: 'fileinput',
     fileHandle: null,
     languageSelected: null,
 });
@@ -21,6 +22,206 @@ Alpine.store('marked', {
 });
 Alpine.store('bottomBar', {
     move: false,
+})
+Alpine.store('opfs', {
+    currentDir: '/',
+    path: '',
+    opfs: null,
+    initialized: false,
+    ftjs: null,
+    async init() {
+        this.opfs = await import('./opfs.js');
+        this.initialized = true;
+    },
+    getPath(name) {
+        if (name.startsWith('/')) return name;
+        const base = this.currentDir.endsWith('/') ? this.currentDir : this.currentDir + '/';
+        return (base + name).replace(/\/+/g, '/');
+    },
+    async ls(path=null) {
+        if (!path) path = this.currentDir;
+        const entries = await this.opfs.listDir(path);
+        return entries;
+    },
+    async cd(path) {
+        let segments = this.currentDir.split('/').filter(Boolean);
+        path.split('/').filter(Boolean).forEach(part => {
+            if (part === '..') segments.pop();
+            else if (part !== '.') segments.push(part);
+        });
+
+        const target = '/' + segments.join('/');
+        const exists = await this.opfs.dirExists(target);
+        if (exists) {
+            this.currentDir = target;
+        } else {
+            console.warn("Path not found:", target);
+        }
+    },
+
+    async mkdir(name = 'NewFolder') {
+        const fullPath = this.getPath(name);
+        await this.opfs.mkdir(fullPath);
+        console.log("Created directory at:", fullPath);
+    },
+    async touch(path=this.currentDir, name = null, content = '') {
+        const fullPath = this.getPath(path) + '/' + (name || 'NewFile.txt');
+        await this.opfs.writeFile(fullPath, content);
+        console.log("Created file at:", fullPath);
+    },
+    async rm(path, recursive = false) {
+        const fullPath = this.getPath(path);
+        try {
+            if (await this.opfs.dirExists(fullPath)) {
+                await this.opfs.deleteDir(fullPath, recursive);
+                console.log("Deleted directory at:", fullPath);
+            } else {
+                await this.opfs.deleteFile(fullPath);
+                console.log("Deleted file at:", fullPath);
+            }
+        } catch(e) {
+            console.warn("[FS] Error: " + e);
+        }
+    },
+    async writeFile(name = 'NewFile.txt', content = '') {
+        const fullPath = this.getPath(name);
+        await this.opfs.writeFile(fullPath, content);
+        console.log("File saved to:", fullPath);
+    },
+    async readFile(path = null, name = null) {
+        if (!path) {
+            const fullPath = this.getPath(name)
+            path = fullPath;
+        }
+        const content = await this.opfs.readFile(path);
+        return content;
+
+    },
+    async getTreeJson(dirHandle = null, currentPath = '') {
+        // If no handle provided, start at root
+        if (!dirHandle) {
+            dirHandle = await this.opfs.getRoot();
+        }
+
+        const children = [];
+
+        // Iterate over all entries in this directory
+        for await (const [name, handle] of dirHandle.entries()) {
+            const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
+
+            const node = {
+                name: name,
+                kind: handle.kind, // 'file' or 'directory'
+                path: fullPath,
+            };
+
+            if (handle.kind === 'directory') {
+                // Recursively build children for directories
+                node.children = await this.getTreeJson(handle, fullPath);
+            }
+
+            children.push(node);
+        }
+
+        // Optional: Sort folders first, then files
+        return children.sort((a, b) => {
+            if (a.kind === b.kind) return a.name.localeCompare(b.name);
+            return a.kind === 'directory' ? -1 : 1;
+        });
+    },
+    exec(excc) {
+        const store = Alpine.store('opfs');
+        excc("fs",{
+            async help() {
+                return "\r\nfs is a crude implementation of Linux file system commands for OPFS\r\n"+
+                "Available commands:\r\n"+
+                '   fs cd <path> - Change directory to <path>\r\n'+
+                '   fs ls [path] - List files in [path] or current directory\r\n'+
+                '   fs mkdir <name> - Create a new directory with <name>\r\n'+
+                '   fs rm <path> [-r] - Remove file or directory at <path>, use -r for recursive delete\r\n'+
+                '   fs touch [path] [name] - Create a new empty file with [name] in [path] or current directory\r\n';
+            },
+            async cd(path) {
+                await store.cd(path);
+                return path;   
+            },
+            async ls(path) {
+                const entries = await store.ls(path);
+                if (!entries || entries.length === 0) return 'Empty directory';
+                return entries
+                .map(item => {
+                    const icon = item.kind === 'directory' ? '📁' : '📄';
+                    return `${icon} ${item.name}`;
+                })
+                .join('\r\n'); 
+            },
+            async mkdir(name) {
+                await store.mkdir(name);
+                return name;
+            },
+            async rm(path,r) {
+                if(!path) return;
+                if(r === '-r') r = true;
+                else r = false;
+                await store.rm(path,r);
+                return path + " removed";
+            },
+            async touch(path,name=null,content='') {
+                await store.touch(path,name,content);
+                return name ? name : 'NewFile.txt';
+            }
+        });
+    }, 
+    async drawOPFSFileTree(container = null) {
+        if (!this.initialized) {
+            await this.init();
+        }
+
+        // 1. Generate the JSON structure from actual OPFS data
+        // We wrap it in a root object if your filetree.js expects a single root node
+        const children = await this.getTreeJson();
+
+        const treeJson = {
+            name: 'root',
+            kind: 'directory',
+            path: '/',
+            children: children
+        };
+        console.log("Generated OPFS file tree JSON:", treeJson);
+        console.log("Container element:", container);
+        // 2. Import your renderer
+        try {
+            if (!this.ftjs) {
+                this.ftjs = await import('./filetree.js');
+                console.log("accquired filetree.js")
+            }
+        }
+        catch (e) {
+            console.error("Failed to load filetree.js:", e);
+            return;
+        }
+        if (!container) container = document.getElementById('file-tree');
+        this.ftjs.init(container, this.onDblClick.bind(this), true);
+        this.ftjs.ftClear();
+        this.ftjs.render(treeJson, container);
+
+    },
+    async onDblClick(path) {
+        window.dispatchEvent(new CustomEvent('update-msg',{ detail: { msg: `[OPFS] Opening file: ${path}` },bubbles: true}));
+        let content = await this.readFile(path);
+        Alpine.store('ace').editor.setValue(content, -1);
+        Alpine.store('ace').editor.session.setMode(ace.require("ace/ext/modelist").getModeForPath(path).mode);
+        Alpine.store('ace').openMode = "opfs";
+        this.currentDir = path.substring(0, path.lastIndexOf('/'));
+        this.path = path;
+    }
+});
+Alpine.store('ft', {
+    move: false,
+    open() {
+        this.move = !this.move;
+        //const ft = document.getElementById("file-tree-container");
+    }
 })
 Alpine.data('AceApp', () => ({
     menuCloseButton: false,
@@ -94,31 +295,22 @@ Alpine.data('AceApp', () => ({
             const content = e.target.result;
             this.editor.setValue(content, -1);
         };
-        if (this.$store.ace.isFsapi) {
-            try {
-                const picker = await showOpenFilePicker();
-                console.log(picker);
-
-                if (!picker || picker.length === 0) return;
-                console.log("Opening file using File System Access API");
-                const fileHandle = picker[0];
-                this.$store.ace.fileHandle = fileHandle;
-                const file = await fileHandle.getFile();
-                if (!file) return;
-                this.$dispatch('update-msg', { msg: `${file.name}`, timeout: 0 });
-                reader.readAsText(file);
-                const modelist = ace.require("ace/ext/modelist");
-                const mode = modelist.getModeForPath(file.name).mode;
-                console.log(`Setting editor mode to: ${mode}`);
-                this.editor.session.setMode(mode);
-                console.log(fileHandle);
-                return;
-            }
-            catch (e) {
-                console.error("File open cancelled or failed:", e);
-                this.$dispatch('update-msg', { msg: "File open cancelled or failed.", timeout: 4000 });
-                return;
-            }
+        if (this.$store.ace.openMode === 'fsapi') {
+            const picker = await showOpenFilePicker();
+            console.log(picker);
+            if (!picker || picker.length === 0) return;
+            console.log("Opening file using File System Access API");
+            const fileHandle = picker[0];
+            this.$store.ace.fileHandle = fileHandle;
+            const file = await fileHandle.getFile();
+            if (!file) return;
+            reader.readAsText(file);
+            const modelist = ace.require("ace/ext/modelist");
+            const mode = modelist.getModeForPath(file.name).mode;
+            console.log(`Setting editor mode to: ${mode}`);
+            this.editor.session.setMode(mode);
+            console.log(fileHandle);
+            return;
         }
         console.log("Opening file using File Input");
         const fileInput = document.createElement('input');
@@ -174,9 +366,15 @@ Alpine.data('AceApp', () => ({
             }
             return;
         }
-        if (this.$store.ace.isFsapi) {
+        if (this.$store.ace.openMode === 'opfs') {
+            await Alpine.store('opfs').writeFile(Alpine.store('opfs').path, this.editor.getValue());
+            this.$dispatch('update-msg', { msg: `File saved to OPFS as ${Alpine.store('opfs').path}` });
+            this.$store.ace.save = false;
+            return;
+        }
+        if (this.$store.ace.openMode === 'fsapi') {
             if (!this.$store.ace.fileHandle) {
-                this.$dispatch('update-msg', { msg: `Save aborted: No file opened.`, timeout: 3000 });
+                this.$dispatch('update-msg', { msg: "No file is opened to save. Please open a file first." });
                 return;
             }
             try {
@@ -195,7 +393,7 @@ Alpine.data('AceApp', () => ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        if (!filename || filename === 'Enter here...') {
+        if  (!filename || filename === 'Enter here...') {
             this.$dispatch('update-msg', { msg: " Using default filename: download.txt", timeout: 3000 });
         }
         a.download = filename || 'download.txt';
@@ -315,19 +513,22 @@ Alpine.data('statusBar', () => ({
 }));
 Alpine.data('terminal', () => ({
     term: null,
+    fitAddon: null,
     initialized: false,
     async init() {
         if (this.initialized) return;
-        const { Terminal } = await import('@xterm/xterm');
-        const { FitAddon } = await import('@xterm/addon-fit');
-        const fitAddon = new FitAddon();
+        const [{ Terminal }, { FitAddon }] = await Promise.all([
+            import('@xterm/xterm'),
+            import('@xterm/addon-fit')
+        ]);
+        this.fitAddon = new FitAddon();
         await import('@xterm/xterm/css/xterm.css');
         const { nl, ParseInput: prsin, execCommand: excc } = await import('./terminal.js');
         this.initialized = true;
         const container = this.$refs.terminal;
         const term = new Terminal({
             cursorBlink: true,
-            overflow: true,
+            scrollback: 1000,
             theme: {
                 background: '#000000',
             }
@@ -337,16 +538,26 @@ Alpine.data('terminal', () => ({
         term.open(container);
         fitAddon.fit();
         term.focus();
+        term.loadAddon(this.fitAddon);
+        setTimeout(() => {
+            if (this.fitAddon) {
+                this.fitAddon.fit();
+                this.term.scrollToBottom();
+                this.term.focus();
+            }
+        }, 400);
         term.write(nl('Welcome to Ace-WebUI\r\n\r\nType help for more info'));
-        term.onData(data => {
-            const output = prsin(data);
+        term.onData(async data => {
+            const output = await prsin(data);
             term.write(output);
         });
         const aceExcc = Alpine.store('ace').excc;
+        const fsExcc = Alpine.store('opfs').exec;
         aceExcc(excc); //passing a reference of excc
         excc("init", () => {
             return '\x1bcWelcome to Ace-WebUI\r\n\r\nType help for more info';
         })
+        fsExcc(excc); //passing a refernce of excc
         excc("clear", () => {
             return '\x1bc';
         });
@@ -357,7 +568,8 @@ Alpine.data('terminal', () => ({
                 '   init - Initialize the terminal\r\n' +
                 '   clear - Clear the terminal screen\r\n' +
                 '   exit - Exit the terminal interface\r\n' +
-                '   editor - Access editor commands (type "editor help" for more info)';
+                '   editor - Access editor commands (type "editor help" for more info)\r\n'+
+                '   fs - Access OPFS file system commands (type "fs help" for more info)\r\n';
         });
         excc("exit", () => {
             term.write(nl('\r\nExiting terminal...'));
