@@ -253,7 +253,7 @@ Alpine.data('AceApp', () => ({
                         ':<line_number> - Go to the specified line number (e.g., :10 to go to line 10)';
                     return helpText;
                 },
-                version() { return "0.0.7" },
+                version() { return "0.0.8" },
                 prompt() {
                     this.app.prompts()
                     return '';

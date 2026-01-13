@@ -14,7 +14,7 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 ## To Do
 - [x] **Add File System API**
 - [x] **Add Terminal  Functionality**
-- [ ] **Add File Tree**
+- [x] **Add File Tree**
 - [x] **Add Renderer for Markdown Files**
 - [ ] **Maybe Add Latex and Typst Support**
 - [ ] **Add the backend with the same features released last time**
