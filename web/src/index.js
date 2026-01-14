@@ -64,7 +64,7 @@ Alpine.store('opfs', {
         await this.opfs.mkdir(fullPath);
         console.log("Created directory at:", fullPath);
     },
-    async touch(path=this.currentDir, name = null, content = '') {
+    async touch( name = null,path=this.currentDir, content = '') {
         const fullPath = this.getPath(path) + '/' + (name || 'NewFile.txt');
         await this.opfs.writeFile(fullPath, content);
         console.log("Created file at:", fullPath);
@@ -166,8 +166,8 @@ Alpine.store('opfs', {
                 await store.rm(path,r);
                 return path + " removed";
             },
-            async touch(path,name=null,content='') {
-                await store.touch(path,name,content);
+            async touch(name=null,path=this.currentDir,content='') {
+                await store.touch(name,path,content);
                 return name ? name : 'NewFile.txt';
             }
         });
