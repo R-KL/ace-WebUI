@@ -80,17 +80,17 @@ export async function exists(path) {
     if (parts.length === 0) return true;
     const name = parts.pop();
     const parentDir = await getDirHandle(parts.join('/'));
-    await parentDir.getDirectoryHandle(name); 
+    await parentDir.getDirectoryHandle(name);
     return true;
   } catch {
     try {
-        const parts = splitPath(path);
-        const name = parts.pop();
-        const parentDir = await getDirHandle(parts.join('/'));
-        await parentDir.getFileHandle(name);
-        return true;
+      const parts = splitPath(path);
+      const name = parts.pop();
+      const parentDir = await getDirHandle(parts.join('/'));
+      await parentDir.getFileHandle(name);
+      return true;
     } catch {
-        return false;
+      return false;
     }
   }
 }
@@ -111,10 +111,12 @@ export async function mkdir(path) {
 
 export async function deleteDir(path, recursive = true) {
   const root = await getRoot();
-  await root.removeEntry(
-    splitPath(path)[0],
-    { recursive }
-  );
+  const parts = splitPath(path);
+  if (parts.length === 0) return; //cannot delete root
+  const name = parts.pop();
+  const parentPath = parts.join('/');
+  const parentDir = await getDirHandle(parentPath);
+  await parentDir.removeEntry(name, { recursive })
 }
 
 // -----------------------------

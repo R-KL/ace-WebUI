@@ -1,7 +1,6 @@
 import './style.css';
 import Alpine from 'alpinejs';
 import lz from 'lz-string';
-import { mkdir } from './opfs.js';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -38,7 +37,7 @@ Alpine.store('opfs', {
         const base = this.currentDir.endsWith('/') ? this.currentDir : this.currentDir + '/';
         return (base + name).replace(/\/+/g, '/');
     },
-    async ls(path=null) {
+    async ls(path = null) {
         if (!path) path = this.currentDir;
         const entries = await this.opfs.listDir(path);
         return entries;
@@ -64,7 +63,7 @@ Alpine.store('opfs', {
         await this.opfs.mkdir(fullPath);
         console.log("Created directory at:", fullPath);
     },
-    async touch( name = null,path=this.currentDir, content = '') {
+    async touch(name = null, path = this.currentDir, content = '') {
         const fullPath = this.getPath(path) + '/' + (name || 'NewFile.txt');
         await this.opfs.writeFile(fullPath, content);
         console.log("Created file at:", fullPath);
@@ -79,7 +78,7 @@ Alpine.store('opfs', {
                 await this.opfs.deleteFile(fullPath);
                 console.log("Deleted file at:", fullPath);
             }
-        } catch(e) {
+        } catch (e) {
             console.warn("[FS] Error: " + e);
         }
     },
@@ -131,62 +130,61 @@ Alpine.store('opfs', {
     },
     exec(excc) {
         const store = Alpine.store('opfs');
-        excc("fs",{
+        excc("fs", {
             async help() {
-                return "\r\nfs is a crude implementation of Linux file system commands for OPFS\r\n"+
-                "Available commands:\r\n"+
-                '   fs cd <path> - Change directory to <path>\r\n'+
-                '   fs ls [path] - List files in [path] or current directory\r\n'+
-                '   fs mkdir <name> - Create a new directory with <name>\r\n'+
-                '   fs rm <path> [-r] - Remove file or directory at <path>, use -r for recursive delete\r\n'+
-                '   fs touch [path] [name] - Create a new empty file with [name] in [path] or current directory\r\n';
+                return "\r\nfs is a crude implementation of Linux file system commands for OPFS\r\n" +
+                    "Available commands:\r\n" +
+                    '   fs cd <path> - Change directory to <path>\r\n' +
+                    '   fs ls [path] - List files in [path] or current directory\r\n' +
+                    '   fs mkdir <name> - Create a new directory with <name>\r\n' +
+                    '   fs rm <path> [-r] - Remove file or directory at <path>, use -r for recursive delete\r\n' +
+                    '   fs touch [path] [name] - Create a new empty file with [name] in [path] or current directory\r\n';
             },
             async cd(path) {
                 await store.cd(path);
-                return path;   
+                return path;
             },
             async ls(path) {
                 const entries = await store.ls(path);
                 if (!entries || entries.length === 0) return 'Empty directory';
                 return entries
-                .map(item => {
-                    const icon = item.kind === 'directory' ? '📁' : '📄';
-                    return `${icon} ${item.name}`;
-                })
-                .join('\r\n'); 
+                    .map(item => {
+                        const icon = item.kind === 'directory' ? '📁' : '📄';
+                        return `${icon} ${item.name}`;
+                    })
+                    .join('\r\n');
             },
             async mkdir(name) {
                 await store.mkdir(name);
                 return name;
             },
-            async rm(path,r) {
-                if(!path) return;
-                if(r === '-r') r = true;
+            async rm(path, r) {
+                if (!path) return;
+                if (r === '-r') r = true;
                 else r = false;
-                await store.rm(path,r);
+                await store.rm(path, r);
                 return path + " removed";
             },
-            async touch(name=null,path=this.currentDir,content='') {
-                await store.touch(name,path,content);
+            async touch(name = null, path = this.currentDir, content = '') {
+                await store.touch(name, path, content);
                 return name ? name : 'NewFile.txt';
             }
         });
-    }, 
+    },
+    makeItRoot(inputPath) {
+        return {
+            name: 'root',
+            kind: 'directory',
+            path: '/',
+            children: inputPath
+        };
+    },
     async drawOPFSFileTree(container = null) {
         if (!this.initialized) {
             await this.init();
         }
-
-        // 1. Generate the JSON structure from actual OPFS data
-        // We wrap it in a root object if your filetree.js expects a single root node
         const children = await this.getTreeJson();
-
-        const treeJson = {
-            name: 'root',
-            kind: 'directory',
-            path: '/',
-            children: children
-        };
+        const treeJson = this.makeItRoot(children);
         console.log("Generated OPFS file tree JSON:", treeJson);
         console.log("Container element:", container);
         // 2. Import your renderer
@@ -204,10 +202,86 @@ Alpine.store('opfs', {
         this.ftjs.init(container, this.onDblClick.bind(this), true);
         this.ftjs.ftClear();
         this.ftjs.render(treeJson, container);
+        this.contextMenuObject = {
+            "New File": async (path) => {
+                if (this.getPath(path)) {
+                    const fileName = prompt("Enter new File Name", "NewFile.txt");
+                    if (fileName) {
+                        this.touch(fileName, path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+
+                }
+            },
+            "New Folder": async (path, _kind) => {
+                if (this.getPath(this.currentDir)) {
+                    const folderName = prompt("Enter new Folder Name", "NewFolder");
+                    if (folderName) {
+                        this.opfs.mkdir(path + "/" + folderName).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+            /*  "Cut": (path, kind) => {
+                  if (kind === "directory") return; // Later add ability to cut entire directories
+                  if (this.getPath(path)) {
+                      if (this.opfs.exists(path)) {
+                          const editor = Alpine.raw(Alpine.store('ace').editor);
+                          const value = editor.getValue();
+                          console.log("Cutting File:", value);
+                          navigator.clipboard.writeText(value).then(() => {
+                              console.log("File content copied to clipboard ( for now its same has copying )");
+                          });
+                      }
+                  }
+              }, */
+            "Copy ": () => { alert("Copying File ( this has not been implemented yet, will do it later") },
+            "Paste": async () => { alert("Pasting File ( this has not been implemented yet, will do it later");},
+            "Rename": async (path, _kind) => {
+                if (this.getPath(path)) {
+                    if (this.opfs.exists(path) || this.opfs.dirExists(path)) {
+                        const newValue = prompt("Enter new File Name")
+                        let last = path.split('/');
+                        last.pop();
+                        last = last.join("/");
+                        console.log(last + "/" + newValue, "\n");
+                        this.opfs.move(path, last + "/" + newValue).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+            "Delete": async (path, _kind) => {
+                const part = path.split('/');
+                const name = part.pop();
+                if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+                if (this.getPath(path)) {
+                    if (this.opfs.dirExists(path)) {
+                        ``
+                        this.opfs.deleteDir(path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    } else if (this.opfs.exists(path)) {
+                        this.opfs.deleteFile(path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+
+        }
+        this.ftjs.contextMenu(container, this.contextMenuObject);
+
 
     },
-    async onDblClick(path) {
-        window.dispatchEvent(new CustomEvent('update-msg',{ detail: { msg: `[OPFS] Opening file: ${path}` },bubbles: true}));
+    async onDblClick(path, kind) {
+        if (kind === 'directory') {
+            Alpine.store('opfs').currentDir = path;
+            return;
+        }
+        window.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: `[OPFS] Opening file: ${path}` }, bubbles: true }));
         let content = await this.readFile(path);
         Alpine.store('ace').editor.setValue(content, -1);
         Alpine.store('ace').editor.session.setMode(ace.require("ace/ext/modelist").getModeForPath(path).mode);
@@ -393,7 +467,7 @@ Alpine.data('AceApp', () => ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        if  (!filename || filename === 'Enter here...') {
+        if (!filename || filename === 'Enter here...') {
             this.$dispatch('update-msg', { msg: " Using default filename: download.txt", timeout: 3000 });
         }
         a.download = filename || 'download.txt';
@@ -568,7 +642,7 @@ Alpine.data('terminal', () => ({
                 '   init - Initialize the terminal\r\n' +
                 '   clear - Clear the terminal screen\r\n' +
                 '   exit - Exit the terminal interface\r\n' +
-                '   editor - Access editor commands (type "editor help" for more info)\r\n'+
+                '   editor - Access editor commands (type "editor help" for more info)\r\n' +
                 '   fs - Access OPFS file system commands (type "fs help" for more info)\r\n';
         });
         excc("exit", () => {
@@ -625,19 +699,19 @@ Alpine.data('markedPreview', () => ({
             const BlobContent = new Blob([content], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(BlobContent);
             if (!this.$store.marked.ack) {
-            this.$store.marked.ack = confirm("Beware: This preview renders and executes all HTML, CSS, and JavaScript code directly in the browser. \n\n"+
-                "Ensure that the content is from a trusted source to avoid potential security risks. Do not run random code on internet!\n\n"+
-                "This prompt will only appear once per session.");
+                this.$store.marked.ack = confirm("Beware: This preview renders and executes all HTML, CSS, and JavaScript code directly in the browser. \n\n" +
+                    "Ensure that the content is from a trusted source to avoid potential security risks. Do not run random code on internet!\n\n" +
+                    "This prompt will only appear once per session.");
             }
-            this.$store.marked.ack ? window.open(blobUrl, '_blank') : null; 
+            this.$store.marked.ack ? window.open(blobUrl, '_blank') : null;
             return;
         }
         const template = await fetch('preview.html').then(res => res.text());
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
-        const highlightCss = await import ('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {
+        const highlightCss = await import('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {
             console.log(mod.default);
-        previewHtml = previewHtml.replace('<!-- STYLES -->','<style>' + mod.default + '</style>');
+            previewHtml = previewHtml.replace('<!-- STYLES -->', '<style>' + mod.default + '</style>');
         });
         console.log(highlightCss);
         const blob = new Blob([previewHtml], { type: 'text/html' });
