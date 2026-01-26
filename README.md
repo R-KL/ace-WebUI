@@ -1,5 +1,7 @@
 #  Ace-Editor Web-UI Built in Rust
-## This is the Beta (I know its saying Alpha, thats my mistake) Branch . The Entire fontend is being rewritten in Alpine.js and tailwindcss for better UI/UX features and to add more functionality in future releases.
+
+> [!NOTE]
+> This is the beta branch for the upcoming 0.1.0 release. Currently the entire project is been re-written from vanilla JS to ALpineJS+TailwindCSS for better performance and maintainability.
 
 ## Current Version: 0.0.9 Beta
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -12,7 +14,7 @@ Ace-Editor Web-UI is a full-stack web application providing a browser-based code
 
 All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at compile time, so deployment is as simple as copying a single file.
 
-## To Do
+## To Do (0.1.0)
 - [x] **Add File System API**
 - [x] **Add Terminal  Functionality**
 - [x] **Add File Tree**
@@ -20,7 +22,7 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 - [ ] **Maybe Add Latex and Typst Support**
 - [ ] **Add the backend with the same features released last time**
 
-## To Do Next Release
+## To Do Next Release (0.2.0)
 
 - [ ] **Add SSH support**
 - [ ] **Add add circuit rendering in markdown...**
