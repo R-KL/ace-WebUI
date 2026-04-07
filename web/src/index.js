@@ -684,7 +684,40 @@ Alpine.data('markedPreview', () => ({
         if (code.trim() === '') {
             return '<p><em>No content to preview.</em></p>';
         }
-        return this.dompurify.sanitize(this.markedInstance.parse(code));
+        const STYLE_MAP = {
+            // Typography
+            "_line-height": "line-height",
+            "_letter-spacing": "letter-spacing",
+            "_size": "font-size",
+            "_weight": "font-weight",
+            "_font": "font-family",
+            
+            // Layout
+            "_width": "max-width",
+            "_pad": "padding",
+            "_bg": "background-color",
+            "_color": "color",
+            
+            // Accents
+            "_accent": "accent-color",
+            "_radius": "border-radius"
+        };
+        const tokens = this.markedInstance.lexer(code);
+        let styles = "";
+        //Code to detect Ace-WebUI specific CSS styling syntax
+        if(tokens.links){
+            for(const [key,data] of Object.entries(tokens.links)){
+                if(STYLE_MAP[key]){
+                    const property = STYLE_MAP[key];
+                    const value = data.title ? data.title.replace(/[()]/g,'') : '';
+                    styles += `body {${property}:${value} !important;}`;
+                }
+            }
+        }
+        Alpine.store('marked').styles = styles;
+        const parsed = this.markedInstance.parser(tokens);
+
+        return this.dompurify.sanitize(parsed);
     },
     get renderedHTML() {
         const code = Alpine.store('ace').editor.getValue();
@@ -710,8 +743,8 @@ Alpine.data('markedPreview', () => ({
         const content = this.renderedMarkdown;
         let previewHtml = template.replace('<!-- CONTENT -->', content);
         const highlightCss = await import('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {
-            console.log(mod.default);
-            previewHtml = previewHtml.replace('<!-- STYLES -->', '<style>' + mod.default + '</style>');
+            //console.log(mod.default);
+            previewHtml = previewHtml.replace('<!-- STYLES -->', '<style>' + mod.default + '</style><style>' + Alpine.store('marked').styles + '</style>');
         });
         console.log(highlightCss);
         const blob = new Blob([previewHtml], { type: 'text/html' });
