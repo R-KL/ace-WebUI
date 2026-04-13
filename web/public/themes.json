@@ -1,65 +1,56 @@
 {
   "carbon": {
-    "name": "Carbon",
-    "bg": "#292a2d",
-    "main": "#e1e1e1",
-    "accent": "#f57d1f",
-    "font": "'JetBrains Mono', monospace"
+    "_bg": "#292a2d",
+    "_main": "#e1e1e1",
+    "_accent": "#f57d1f",
+    "_font": "'JetBrains Mono', monospace"
   },
   "serika_dark": {
-    "name": "Serika Dark",
-    "bg": "#323437",
-    "main": "#d1d0c5",
-    "accent": "#e2b714",
-    "font": "'Roboto Mono', monospace"
+    "_bg": "#323437",
+    "_main": "#d1d0c5",
+    "_accent": "#e2b714",
+    "_font": "'Roboto Mono', monospace"
   },
   "nord": {
-    "name": "Nord",
-    "bg": "#2e3440",
-    "main": "#d8dee9",
-    "accent": "#88c0d0",
-    "font": "'Inter', sans-serif"
+    "_bg": "#2e3440",
+    "_main": "#d8dee9",
+    "_accent": "#88c0d0",
+    "_font": "'Inter', sans-serif"
   },
   "botanical": {
-    "name": "Botanical",
-    "bg": "#7b9c98",
-    "main": "#eaf2f1",
-    "accent": "#495e5b",
-    "font": "system-ui, sans-serif"
+    "_bg": "#7b9c98",
+    "_main": "#eaf2f1",
+    "_accent": "#495e5b",
+    "_font": "system-ui, sans-serif"
   },
   "9009": {
-    "name": "9009",
-    "bg": "#eeebe2",
-    "main": "#524b43",
-    "accent": "#8d5c5c",
-    "font": "serif"
+    "_bg": "#eeebe2",
+    "_main": "#524b43",
+    "_accent": "#8d5c5c",
+    "_font": "serif"
   },
   "dracula": {
-    "name": "Dracula",
-    "bg": "#282a36",
-    "main": "#f8f8f2",
-    "accent": "#bd93f9",
-    "font": "'Fira Code', monospace"
+    "_bg": "#282a36",
+    "_main": "#f8f8f2",
+    "_accent": "#bd93f9",
+    "_font": "'Fira Code', monospace"
   },
   "bento": {
-    "name": "Bento",
-    "bg": "#2d394d",
-    "main": "#fffaf4",
-    "accent": "#ff7a5c",
-    "font": "'Inter', sans-serif"
+    "_bg": "#2d394d",
+    "_main": "#fffaf4",
+    "_accent": "#ff7a5c",
+    "_font": "'Inter', sans-serif"
   },
   "matrix": {
-    "name": "Matrix",
-    "bg": "#000000",
-    "main": "#00ff41",
-    "accent": "#008f11",
-    "font": "'Courier New', monospace"
+    "_bg": "#000000",
+    "_main": "#00ff41",
+    "_accent": "#008f11",
+    "_font": "'Courier New', monospace"
   },
   "laser": {
-    "name": "Laser",
-    "bg": "#180521",
-    "main": "#35d0e9",
-    "accent": "#d400ff",
-    "font": "sans-serif"
+    "_bg": "#180521",
+    "_main": "#35d0e9",
+    "_accent": "#d400ff",
+    "_font": "sans-serif"
   }
 }

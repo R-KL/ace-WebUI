@@ -1,7 +1,7 @@
 /* filetree.js implementation
 using HTML5 Detail and Summary Tag... no more div hell hehe (thanks UnoCSS for the idea)
 
-for compatibility The input json structure is the same has bowser OPFS
+for compatibility The input json structure is the same has browser OPFS
 obj={
 		"name": "any_name",
 		"kind": "directory" | "file",

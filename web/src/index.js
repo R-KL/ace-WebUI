@@ -655,101 +655,21 @@ Alpine.data('terminal', () => ({
     },
 }));
 Alpine.data('markedPreview', () => ({
-    markedInstance: null,
-    dompurify: null,
-    async init() {
-        // await import('github-markdown-css/github-markdown.css');
-        if (this.markedInstance) return;
-        const self = this;
-        const { Marked, marked: mkd } = await import('marked');
-        const { markedHighlight } = await import('marked-highlight');
-        const hljs = (await import('highlight.js')).default;
-        this.dompurify = (await import('dompurify')).default;
-        this.markedInstance = new Marked(
-            markedHighlight({
-                emptyLangClass: 'hljs',
-                langPrefix: 'hljs language-',
-                highlight(code, lang) {
-                    if (lang && hljs.getLanguage(lang)) {
-                        return hljs.highlight(code, { language: lang }).value;
-                    }
-                    return self.dompurify.sanitize(hljs.highlightAuto(code).value); // auto-detect
-                }
-            })
-        );
-    },
-    get renderedMarkdown() {
-        const code = Alpine.store('ace').editor.getValue();
-        if (!this.markedInstance) return '<p><em>Loading preview...</em></p>';
-        if (code.trim() === '') {
-            return '<p><em>No content to preview.</em></p>';
-        }
-        const STYLE_MAP = {
-            // Typography
-            "_line-height": "line-height",
-            "_letter-spacing": "letter-spacing",
-            "_size": "font-size",
-            "_weight": "font-weight",
-            "_font": "font-family",
-            
-            // Layout
-            "_width": "max-width",
-            "_pad": "padding",
-            "_bg": "background-color",
-            "_color": "color",
-            
-            // Accents
-            "_accent": "accent-color",
-            "_radius": "border-radius"
-        };
-        const tokens = this.markedInstance.lexer(code);
-        let styles = "";
-        //Code to detect Ace-WebUI specific CSS styling syntax
-        if(tokens.links){
-            for(const [key,data] of Object.entries(tokens.links)){
-                if(STYLE_MAP[key]){
-                    const property = STYLE_MAP[key];
-                    const value = data.title ? data.title.replace(/[()]/g,'') : '';
-                    styles += `body {${property}:${value} !important;}`;
-                }
-            }
-        }
-        Alpine.store('marked').styles = styles;
-        const parsed = this.markedInstance.parser(tokens);
 
-        return this.dompurify.sanitize(parsed);
-    },
-    get renderedHTML() {
-        const code = Alpine.store('ace').editor.getValue();
-        if (code.trim() === '') {
-            return '<p><em>No content to preview.</em></p>';
-        }
-        return code;
-    },
     async fetchPreviewHtml() {
+        
         if (this.$store.ace.languageSelected === 'html') {
-            const content = this.renderedHTML;
-            const BlobContent = new Blob([content], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(BlobContent);
-            if (!this.$store.marked.ack) {
-                this.$store.marked.ack = confirm("Beware: This preview renders and executes all HTML, CSS, and JavaScript code directly in the browser. \n\n" +
-                    "Ensure that the content is from a trusted source to avoid potential security risks. Do not run random code on internet!\n\n" +
-                    "This prompt will only appear once per session.");
-            }
-            this.$store.marked.ack ? window.open(blobUrl, '_blank') : null;
+            const { createPreview, renderPreviewHTML } = await import("./preview-engine.js");
+            createPreview("HTML Preview");
+            const content = Alpine.store('ace').editor.getValue();
+            renderPreviewHTML(content);
             return;
         }
-        const template = await fetch('preview.html').then(res => res.text());
-        const content = this.renderedMarkdown;
-        let previewHtml = template.replace('<!-- CONTENT -->', content);
-        const highlightCss = await import('highlight.js/styles/atom-one-dark.min.css?inline').then(mod => {
-            //console.log(mod.default);
-            previewHtml = previewHtml.replace('<!-- STYLES -->', '<style>' + mod.default + '</style><style>' + Alpine.store('marked').styles + '</style>');
-        });
-        console.log(highlightCss);
-        const blob = new Blob([previewHtml], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        const { createPreview, renderPreviewMarkdown } = await import("./preview-engine.js");
+        createPreview("Markdown Preview");
+        const content = Alpine.store('ace').editor.getValue();
+        renderPreviewMarkdown(content);
+        return;
     }
 
 }));

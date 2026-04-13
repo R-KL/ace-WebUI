@@ -1,4 +1,4 @@
-// OPFS Helper 
+// OPFS Helper (Made with AI)
 // Works in Chromium + Firefox
 
 let _rootPromise = null;
