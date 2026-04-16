@@ -3,7 +3,8 @@
     "_bg": "#292a2d",
     "_main": "#e1e1e1",
     "_accent": "#f57d1f",
-    "_font": "'JetBrains Mono', monospace"
+    "_font": "'JetBrains Mono', monospace",
+    "_body-bg": "#1e1e1e"
   },
   "serika_dark": {
     "_bg": "#323437",
@@ -41,11 +42,12 @@
     "_accent": "#ff7a5c",
     "_font": "'Inter', sans-serif"
   },
-  "matrix": {
+  "black": {
     "_bg": "#000000",
     "_main": "#00ff41",
     "_accent": "#008f11",
-    "_font": "'Courier New', monospace"
+    "_font": "'Courier New', monospace",
+    "_body-bg": "black"
   },
   "laser": {
     "_bg": "#180521",

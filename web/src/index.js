@@ -657,19 +657,24 @@ Alpine.data('terminal', () => ({
 Alpine.data('markedPreview', () => ({
 
     async fetchPreviewHtml() {
-        
-        if (this.$store.ace.languageSelected === 'html') {
-            const { createPreview, renderPreviewHTML } = await import("./preview-engine.js");
-            createPreview("HTML Preview");
+        try {
+            if (this.$store.ace.languageSelected === 'html') {
+                const { createPreview, renderPreviewHTML } = await import("./preview-engine.js");
+                createPreview("HTML Preview");
+                const content = Alpine.store('ace').editor.getValue();
+                renderPreviewHTML(content);
+                return;
+            }
+            const { createPreview, renderPreviewMarkdown } = await import("./preview-engine.js");
+            createPreview("Markdown Preview");
             const content = Alpine.store('ace').editor.getValue();
-            renderPreviewHTML(content);
+            renderPreviewMarkdown(content);
+            this.$store.marked.ack = true;
             return;
+        } catch (e) {
+            console.warn("Error fetching preview HTML:", e);
+            this.$store.marked.ack = false;
         }
-        const { createPreview, renderPreviewMarkdown } = await import("./preview-engine.js");
-        createPreview("Markdown Preview");
-        const content = Alpine.store('ace').editor.getValue();
-        renderPreviewMarkdown(content);
-        return;
     }
 
 }));

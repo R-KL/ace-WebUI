@@ -7,10 +7,9 @@ body {
     align-items: flex-start;
     min-height: 100vh;
     margin: auto;
-    letter-spacing: 0.1rem;
 }
 
-#content {
+#preview-container {
     background-color: #0d1117;
     width: 210mm;
     padding: 2rem;
@@ -147,6 +146,11 @@ ul, ol {
 li {
     padding: 0.25rem;
 }
+li:has(.custom-checkbox) {
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
 
 handle {
     position: absolute;
@@ -165,9 +169,4 @@ handle {
 .right-handle {
     right: -4px;
     cursor: ew-resize;
-}
-#preview-container {
-    background-color: #0d1117;
-    max-width: 794px;
-    padding: 1rem;
 }
