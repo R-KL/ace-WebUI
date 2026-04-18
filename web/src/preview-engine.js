@@ -1,12 +1,15 @@
 //This JS script is supposed to be used for the preview function instead of the preview.html template + js in index.js
 // The Idea is to eliminate the need of a separate preview.html template and make the html from pure JS, CSS and JSON files
 
+import { Renderer, Tokenizer } from "marked";
+
 //In future we can also do live preview with this setup...
 
 let doc = null;
 let marked = null;
 //const hljs = null;
 let dompurify = null;
+let temml = null;
 let ask_purify = false;
 let purify = false;
 const STYLE_MAP = {
@@ -50,6 +53,27 @@ async function init_engine() {
             }
         })
     );
+    const TEMML = {
+        name: "math",
+        level: "inline",
+        start(src) { return src.indexOf("$"); },
+        tokenizer(src) {
+            const rule = /^(\$\$?)([^\$]+)\1/;
+            const match = rule.exec(src);
+            if (match) {
+                return {
+                    type: "math",
+                    raw: match[0],
+                    text: match[2].trim()
+                };
+            }
+            return false;
+        },
+        renderer(token) {
+            return renderMath(token);
+        }
+    };
+    marked.use({ extensions: [TEMML] });
 }
 async function applyTheme(theme) {
     try {
@@ -81,7 +105,7 @@ async function applyTheme(theme) {
     }
 }
 
-function checkbox_integration(d,immutable) {
+function checkbox_integration(d, immutable) {
     const checkmarks = d.querySelectorAll('input[type="checkbox"]');
     if (checkmarks.length === 0) return;
     const svg = d.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -139,11 +163,35 @@ export function createPreview(heading = "Preview") {
     div.setAttribute("id", "preview-container");
     d.body.appendChild(div);
 }
+// For math rendering using TeMML
+function renderMath(token) {
+    if (!temml) return token.text; // Fallback to raw text 
+    // console.log(`Rendering math: ${token.text} >> ${temml.renderToString(token.text)}`);
+    return temml.renderToString(token.text,{displayMode: token.raw.startsWith("$$")});
+}
 // for markdown rendering
 export async function renderPreviewMarkdown(content) {
     let checkbox_immutable = false;
     if (!doc || doc.closed) {
         createPreview();
+    }
+    const containsMath = /\$[^$]+\$|\$\$[\s\S]+?\$\$/.test(content);
+    if (containsMath && !temml) {
+        console.log("The preview content contains math. Lazy-loading TeMML...");
+        try {
+            temml = (await import("temml")).default;
+
+            // Only inject the CSS if we actually needed to load TeMML
+            if (!doc.document.getElementById("temml-styles")) {
+                const style = doc.document.createElement("style");
+                style.id = "temml-styles";
+                const temmlCSS = await import("temml/dist/Temml-Local.css?inline");
+                style.textContent = temmlCSS.default;
+                doc.document.head.appendChild(style);
+            }
+        } catch (e) {
+            console.warn("Failed to load TeMML for math rendering.", e);
+        }
     }
     try {
         // Check if the style is already injected
@@ -166,6 +214,7 @@ export async function renderPreviewMarkdown(content) {
     const tokens = marked.lexer(content);
     if (tokens.links) {
         for (const [k, v] of Object.entries(tokens.links)) {
+            if (!k.startsWith("_")) continue; // Only process links that start with "_"
             if (k.startsWith("_body")) {
                 const property = STYLE_MAP[k];
                 const value = v.title ? v.title.replace(/[()]/g, '') : null;
@@ -200,13 +249,13 @@ export async function renderPreviewMarkdown(content) {
     for (const [property, value] of Object.entries(body_styles)) {
         doc.document.body.style.setProperty(property, value);
     }
-    div.innerHTML = dompurify.sanitize(marked.parser(tokens));
-    checkbox_integration(doc.document,checkbox_immutable);
-    
+    div.innerHTML = dompurify.sanitize(marked.parser(tokens), { USE_PROFILES: { html: true, mathMl: true } });
+    checkbox_integration(doc.document, checkbox_immutable);
+
 }
 export async function renderPreviewHTML(content, purify_override = false) {
     if (!ask_purify) {
-      // window.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: "Warning: Rendering raw HTML espicially with JavaScript etc can be dangerous and may lead to XSS attacks. Sanitazation can sometimes remove important functionality provided by JavaScript etc, this is normally done to stop malicious code from running. If you did not intend this, make sure you konw what Javascript code is being executed and render raw HTML without sanitization. You can render raw HTML after this preview using the terminal command preview --raw=true" } }));
+        // window.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: "Warning: Rendering raw HTML espicially with JavaScript etc can be dangerous and may lead to XSS attacks. Sanitazation can sometimes remove important functionality provided by JavaScript etc, this is normally done to stop malicious code from running. If you did not intend this, make sure you konw what Javascript code is being executed and render raw HTML without sanitization. You can render raw HTML after this preview using the terminal command preview --raw=true" } }));
         ask_purify = true;
     }
     if (!doc || doc.closed) {
