@@ -53,7 +53,7 @@ async function init_engine() {
 }
 async function applyTheme(theme) {
     try {
-        const response = await fetch("/themes.json");
+        const response = await fetch("themes.json");
         if (!response.ok) {
             throw new Error(`Failed to load theme JSON: ${response.statusText}`);
         }
