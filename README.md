@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the beta branch for the upcoming 0.1.0 release. Currently the entire project is been re-written from vanilla JS to ALpineJS+TailwindCSS for better performance and maintainability.
 
-## Current Version: 0.0.9 Beta
+## Current Version: 0.0.10 Beta
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/R-KL/ace-WebUI)]()
 A high-performance, standalone, self-hosted code editor powered by a Rust backend and a modern web component frontend. The entire application compiles into a single binary for easy deployment.
@@ -19,7 +19,7 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 - [x] **Add Terminal  Functionality**
 - [x] **Add File Tree**
 - [x] **Add Renderer for Markdown Files**
-- [ ] **Maybe Add Latex and Typst Support**
+- [x] ~**Maybe Add Latex and Typst Support**~ (For now, math can be rendered in markdown using LaTex syntax and the TeMML library)
 - [ ] **Add the backend with the same features released last time**
 
 ## To Do Next Release (0.2.0)
@@ -44,6 +44,10 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 **Frontend:**
 - HTML5 / Tailwind CSS / Alpine.js
 - [Ace Editor](https://ace.c9.io/)
+- [Marked](https://marked.js.org/) for Markdown rendering
+- [TeMML](https://temml.org/) for math rendering in markdown
+- [xterm.js](https://xtermjs.org/) for terminal emulation
+
 
 ## More details will be added when this is complete.
 
@@ -59,6 +63,9 @@ This project uses the following open-source components:
 |--------------|-----------------|-----------------------------------------------------------------------                                         |
 | [Ace Editor](https://ace.c9.io/) | BSD-3-Clause    | Embedded in `web/ace/ace.js`. License headers are preserved in source files.               |
 | [Rust-Embed](https://git.sr.ht/~pyrossh/rust-embed) | MIT/Apache-2.0 | Used to embed static assets into the Rust binary.                        |
+| [Marked](https://marked.js.org/) | MIT             | Used for Markdown parsing and rendering.  |
+| [TeMML](https://temml.org/) | MIT             | Used for rendering mathematical expressions in Markdown.  |
+| [xterm.js](https://xtermjs.org/) | MIT             | Used for terminal emulation.  |
 
 > **Note:** All third-party licenses are respected. No modifications have removed or altered their original license notices.
 
