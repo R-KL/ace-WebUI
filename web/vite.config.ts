@@ -8,6 +8,11 @@ import svg from 'vite-plugin-svgo'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const basePath = process.env.VITE_BASE_PATH || '/'
 export default defineConfig({
+  server: {
+    proxy: {
+      '/fs': 'http://localhost:8080',
+    }
+  },
   plugins: [
     tailwindcss(),
     svg(),

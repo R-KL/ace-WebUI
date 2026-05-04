@@ -67,7 +67,7 @@
                         </svg>
                     </button>
                     <button class="side-button mt-2 group"
-                        @click="alert('I will implement this later along with the backend')">
+                        @click="$store.ft.open();$nextTick(() => $store.backend.drawFileTree());">
                         <svg class="h-6 w-6 text-current group-hover:animate-pulse">
                             <use href="sprite.svg#icon-server"></use>
                         </svg>
@@ -113,7 +113,7 @@
                         longer and ugly url</span> </h4>
                 <span class="self-center">or</span>
                 <div x-data="{ filename: 'Enter here...', btnContent: 'Download File' }"
-                    x-effect="$store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back': $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
+                    x-effect="$store.ace.openMode === 'backend' ? btnContent = 'Save to Backend' : $store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back' : $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
                     <div x-show="$store.ace.openMode === 'fileinput'" class="mb-4">
                         <label for="filename" class="block mb-2">Filename:</label>
                         <input type="text" id="filename" x-model="filename"

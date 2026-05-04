@@ -1,6 +1,7 @@
 import './style.css';
 import Alpine from 'alpinejs';
 import lz from 'lz-string';
+import { init } from './filetree.js';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {
@@ -21,6 +22,19 @@ Alpine.store('marked', {
 });
 Alpine.store('bottomBar', {
     move: false,
+})
+Alpine.store('ft', {
+    move: false,
+    mode: null,
+    ftjs: null,
+    async init() {
+        if (this.ftjs) return;
+        this.ftjs = await import('./filetree.js');
+    },
+    open() {
+        this.move = !this.move;
+        //const ft = document.getElementById("file-tree-container");
+    }
 })
 Alpine.store('opfs', {
     currentDir: '/',
@@ -186,11 +200,11 @@ Alpine.store('opfs', {
         const children = await this.getTreeJson();
         const treeJson = this.makeItRoot(children);
         console.log("Generated OPFS file tree JSON:", treeJson);
-        console.log("Container element:", container);
-        // 2. Import your renderer
+        //   console.log("Container element:", container);
         try {
             if (!this.ftjs) {
-                this.ftjs = await import('./filetree.js');
+                Alpine.store('ft').init();
+                this.ftjs = Alpine.store('ft').ftjs;
                 console.log("accquired filetree.js")
             }
         }
@@ -238,7 +252,7 @@ Alpine.store('opfs', {
                   }
               }, */
             "Copy ": () => { alert("Copying File ( this has not been implemented yet, will do it later") },
-            "Paste": async () => { alert("Pasting File ( this has not been implemented yet, will do it later");},
+            "Paste": async () => { alert("Pasting File ( this has not been implemented yet, will do it later"); },
             "Rename": async (path, _kind) => {
                 if (this.getPath(path)) {
                     if (this.opfs.exists(path) || this.opfs.dirExists(path)) {
@@ -281,7 +295,8 @@ Alpine.store('opfs', {
             Alpine.store('opfs').currentDir = path;
             return;
         }
-        window.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: `[OPFS] Opening file: ${path}` }, bubbles: true }));
+        const container = document.getElementById("file-tree");
+        container.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: `[OPFS] Opening file: ${path}` }, bubbles: true }));
         let content = await this.readFile(path);
         Alpine.store('ace').editor.setValue(content, -1);
         Alpine.store('ace').editor.session.setMode(ace.require("ace/ext/modelist").getModeForPath(path).mode);
@@ -290,13 +305,141 @@ Alpine.store('opfs', {
         this.path = path;
     }
 });
-Alpine.store('ft', {
-    move: false,
-    open() {
-        this.move = !this.move;
-        //const ft = document.getElementById("file-tree-container");
+Alpine.store('backend', {
+    ftjs: null,
+
+    async init() {
+        if (!this.ftjs) {
+            try {
+                await Alpine.store('ft').init();
+                this.ftjs = Alpine.store('ft').ftjs;
+            }
+            catch (e) {
+                console.warn("Failed to load filetree.js:", e);
+            }
+            this.initialized = true;
+        }
+    },
+    async drawFileTree(container = null) {
+        if (!this.ftjs) {
+            await this.init();
+        }
+        const treeJson = await fetch('/fs/get_file_tree', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: '/' })
+        }).then(res => res.json());
+        console.log("Generated OPFS file tree JSON:", treeJson);
+        console.log("Container element:", container);
+        if (!container) container = document.getElementById('file-tree');
+        this.ftjs.init(container, this.onDblClick.bind(this), true);
+        this.ftjs.ftClear();
+        this.ftjs.render(treeJson, container);
+        this.contextMenuObject = {
+            "New File": async (path) => {
+                alert("I will implement this later");
+                return;
+                if (this.getPath(path)) {
+                    const fileName = prompt("Enter new File Name", "NewFile.txt");
+                    if (fileName) {
+                        this.touch(fileName, path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+
+                }
+            },
+            "New Folder": async (path, _kind) => {
+                alert("I will implement this later");
+                return;
+                if (this.getPath(this.currentDir)) {
+                    alert("_will implement later");
+                    return;
+                    const folderName = prompt("Enter new Folder Name", "NewFolder");
+                    if (folderName) {
+                        this.opfs.mkdir(path + "/" + folderName).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+            /*  "Cut": (path, kind) => {
+                  if (kind === "directory") return; // Later add ability to cut entire directories
+                  if (this.getPath(path)) {
+                      if (this.opfs.exists(path)) {
+                          const editor = Alpine.raw(Alpine.store('ace').editor);
+                          const value = editor.getValue();
+                          console.log("Cutting File:", value);
+                          navigator.clipboard.writeText(value).then(() => {
+                              console.log("File content copied to clipboard ( for now its same has copying )");
+                          });
+                      }
+                  }
+              }, */
+            "Copy ": () => { alert("Copying File ( this has not been implemented yet, will do it later") },
+            "Paste": async () => { alert("Pasting File ( this has not been implemented yet, will do it later"); },
+            "Rename": async (path, _kind) => {
+                alert("I will implement this later");
+                if (this.getPath(path)) {
+                    if (this.opfs.exists(path) || this.opfs.dirExists(path)) {
+                        const newValue = prompt("Enter new File Name")
+                        let last = path.split('/');
+                        last.pop();
+                        last = last.join("/");
+                        console.log(last + "/" + newValue, "\n");
+                        this.opfs.move(path, last + "/" + newValue).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+            "Delete": async (path, _kind) => {
+                alert("I will implement this later");
+                return;
+                const part = path.split('/');
+                const name = part.pop();
+                if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+                if (this.getPath(path)) {
+                    if (this.opfs.dirExists(path)) {
+                        return;
+                        this.opfs.deleteDir(path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    } else if (this.opfs.exists(path)) {
+                        this.opfs.deleteFile(path).then(async () => {
+                            this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+                        });
+                    }
+                }
+            },
+
+        }
+        this.ftjs.contextMenu(container, this.contextMenuObject);
+    },
+    async onDblClick(path, kind) {
+        if (kind === 'directory') {
+            Alpine.store('backend').currentDir = path;
+            return;
+        }
+        const container = document.getElementById("file-tree");
+        container.dispatchEvent(new CustomEvent('update-msg', { detail: { msg: `[Backend] Opening file: ${path}` }, bubbles: true }));
+        let content = await fetch('/fs/read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path })
+        });
+        content = await content.text();
+        Alpine.store('ace').editor.setValue(content, -1);
+        Alpine.store('ace').editor.session.setMode(ace.require("ace/ext/modelist").getModeForPath(path).mode);
+        Alpine.store('ace').openMode = "backend";
+        this.currentDir = path.substring(0, path.lastIndexOf('/'));
+        this.path = path;
     }
-})
+});
 Alpine.data('AceApp', () => ({
     menuCloseButton: false,
 
@@ -461,6 +604,22 @@ Alpine.data('AceApp', () => ({
                 console.error("Error saving file:", e);
                 alert("Failed to save the file. See console for details.");
             }
+            return;
+        }
+        if (this.$store.ace.openMode === 'backend') {
+            try {
+                const response = await fetch('/fs/write', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ path: Alpine.store('backend').path, content: this.editor.getValue() })
+                });
+            } catch (error) {
+                console.error("Error saving file to backend:", error);
+                this.$dispatch('update-msg', { msg: "Failed to save the file to the backend. See console for details." });
+            }
+            this.$store.ace.save = false;
             return;
         }
         const blob = new Blob([this.editor.getValue()], { type: 'text/plain' });

@@ -6,6 +6,7 @@ settings.json
 config.yaml
 node_modules/
 custom*
+files/
 # Ignore IDE-specific files (optional but good practice)
 .vscode/
 .idea/

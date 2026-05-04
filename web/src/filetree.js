@@ -19,6 +19,8 @@ let pathHistory = {
 };
 let currentPath = "/";
 let icon_g = false;
+let existing_click_event = null;
+let existing_dbclick_event = null;
 /**
  * Render the file tree structure inside the global container
  * @param {object} node - The current node to render (default is the root fileTree).
@@ -119,7 +121,10 @@ function init(id = null, callback, icon = false) {
 	icon_g = icon;
 	container.innerHTML = "";
 	render(fileTree, container);
-	container.addEventListener("click", (e) => {
+	if(existing_click_event) {
+		container.removeEventListener("click", existing_click_event);
+	}
+	existing_click_event = (e) => {
 		//	console.log("CLICK event fired")
 		const target = e.target.closest("[data-path]");
 		if (!target) return;
@@ -132,8 +137,12 @@ function init(id = null, callback, icon = false) {
 			pathHistory.index++;
 		}
 		currentPath = path;
-	})
-	container.addEventListener("dblclick", (e) => {
+	}
+	container.addEventListener("click", existing_click_event);
+	if(existing_dbclick_event) {
+		container.removeEventListener("dblclick", existing_dbclick_event);
+	}
+	existing_dbclick_event = (e) => {
 		const el = e.target.closest("[data-path]");
 		if (!el) return;
 
@@ -141,8 +150,8 @@ function init(id = null, callback, icon = false) {
 		const kind = el.dataset.kind;
 		if (!path && !kind) return;
 		callback(path, kind);
-	});
-
+	}
+	container.addEventListener("dblclick", existing_dbclick_event);
 }
 /**
  * Render Context Menu
