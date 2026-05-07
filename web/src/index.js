@@ -1,7 +1,6 @@
 import './style.css';
 import Alpine from 'alpinejs';
 import lz from 'lz-string';
-import { init } from './filetree.js';
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store('ace', {

@@ -1,8 +1,5 @@
 //This JS script is supposed to be used for the preview function instead of the preview.html template + js in index.js
 // The Idea is to eliminate the need of a separate preview.html template and make the html from pure JS, CSS and JSON files
-
-import { Renderer, Tokenizer } from "marked";
-
 //In future we can also do live preview with this setup...
 
 let doc = null;
