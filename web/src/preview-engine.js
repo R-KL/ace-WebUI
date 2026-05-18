@@ -1,8 +1,5 @@
 //This JS script is supposed to be used for the preview function instead of the preview.html template + js in index.js
 // The Idea is to eliminate the need of a separate preview.html template and make the html from pure JS, CSS and JSON files
-
-import { Renderer, Tokenizer } from "marked";
-
 //In future we can also do live preview with this setup...
 
 let doc = null;
@@ -145,9 +142,9 @@ function checkbox_integration(d, immutable) {
     }
 }
 
-export function createPreview(heading = "Preview") {
+export function createPreview(heading = "Preview",sameWindow = null) {
     //defining the html page
-    doc = window.open("", "_blank");
+    doc = window.open("", sameWindow ? "_self": "_blank");
     const d = doc.document;
     const metaCharSet = d.createElement("meta");
     const metaViewport = d.createElement("meta");
@@ -170,7 +167,7 @@ function renderMath(token) {
     return temml.renderToString(token.text,{displayMode: token.raw.startsWith("$$")});
 }
 // for markdown rendering
-export async function renderPreviewMarkdown(content) {
+export async function renderPreviewMarkdown(content, sameWindow = null) {
     let checkbox_immutable = false;
     if (!doc || doc.closed) {
         createPreview();
