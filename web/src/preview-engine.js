@@ -142,9 +142,9 @@ function checkbox_integration(d, immutable) {
     }
 }
 
-export function createPreview(heading = "Preview") {
+export function createPreview(heading = "Preview",sameWindow = null) {
     //defining the html page
-    doc = window.open("", "_blank");
+    doc = window.open("", sameWindow ? "_self": "_blank");
     const d = doc.document;
     const metaCharSet = d.createElement("meta");
     const metaViewport = d.createElement("meta");
@@ -167,7 +167,7 @@ function renderMath(token) {
     return temml.renderToString(token.text,{displayMode: token.raw.startsWith("$$")});
 }
 // for markdown rendering
-export async function renderPreviewMarkdown(content) {
+export async function renderPreviewMarkdown(content, sameWindow = null) {
     let checkbox_immutable = false;
     if (!doc || doc.closed) {
         createPreview();
