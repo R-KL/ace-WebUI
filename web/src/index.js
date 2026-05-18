@@ -704,17 +704,12 @@ Alpine.data("AceApp", () => ({
   },
   async readFromUrl() {
     const hash = window.location.hash.slice(1);
-<<<<<<< HEAD
     if (!hash) {
       this.loading = false;
       return;
     }
     try {
-=======
-    if (!hash) return;
-    try {
       this.loading = true;
->>>>>>> 0525e199a8003a91201fff417e3c917f16919e39
       const decoded = lz.decompressFromEncodedURIComponent(hash);
       const [, encodedcode, mode, theme, render] = decoded.match(
         /\?code=([^&]*)&mode=([^&]*)&theme=([^&]*)&render=([^&]*)/,
@@ -736,10 +731,7 @@ Alpine.data("AceApp", () => ({
           createPreview("Markdown Preview",false);
           renderPreviewMarkdown(code);
         }
-<<<<<<< HEAD
         this.loading = false;
-=======
->>>>>>> 0525e199a8003a91201fff417e3c917f16919e39
         setTimeout(() => {
           this.$dispatch("update-msg", {
             msg: `Decompresing #${hash.slice(0, 20)}...`,
@@ -751,14 +743,10 @@ Alpine.data("AceApp", () => ({
       }
     } catch (e) {
       console.warn("Failed to decompress content from URL:", e);
-<<<<<<< HEAD
-    } finally {
+    }
+    finally {
       this.loading = false;
-    }
-=======
-    }
-    this.loading = false;
->>>>>>> 0525e199a8003a91201fff417e3c917f16919e39
+      }
   },
   markDownMode() {
     // this includes both markdown and html since hey they both can use the marked preview
