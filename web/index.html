@@ -1,280 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Web Editor</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta charset="UTF-8">
-        <meta name="description" content="A web-based code editor using Ace Editor">
-        <link rel="icon" type="image/webp" href="favicon.webp">
-        <script src="/ace/ace.js"></script>
-        <script src="/ace/ext-language_tools.js"></script>
-        <script src="/ace/ext-statusbar.js"></script>
-        <script type="module" src="/src/index.js"></script>
-        <style>
-                [x-cloak] { display: none !important; }
-        </style>
-    </head>
-    <body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
-        <div id="main-window">
-    <body x-data="AceApp(), loading = true" class="h-full flex flex-col overflow-hidden bg-neutral-900">
-        <div id="load-screen">
-            <div x-show="loading" id="skeleton-loader">
-              <div class="h-screen w-screen bg-neutral-900 relative flex flex-col overflow-hidden animate-pulse">
-                  
-                  <div class="absolute top-3 right-3 z-10 flex flex-col gap-2">
-                      <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
-                      <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
-                      <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
-                      <div class="mt-2 h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
-                  </div>
-              
-                  <div class="grow w-full relative pt-12 px-8">
-                      <div class="space-y-4 opacity-50">
-                          <div class="flex items-center space-x-4">
-                              <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">1</div>
-                              <div class="h-4 w-1/3 bg-neutral-700 rounded-full"></div>
-                          </div>
-                          <div class="flex items-center space-x-4">
-                              <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">2</div>
-                              <div class="h-4 w-1/2 bg-neutral-800 rounded-full ml-8"></div>
-                          </div>
-                          <div class="flex items-center space-x-4">
-                              <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">3</div>
-                              <div class="h-4 w-1/4 bg-neutral-700 rounded-full ml-16"></div>
-                          </div>
-                          <div class="flex items-center space-x-4">
-                              <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">4</div>
-                              <div class="h-4 w-2/3 bg-neutral-800 rounded-full ml-8"></div>
-                          </div>
-                          <div class="flex items-center space-x-4">
-                              <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">5</div>
-                              <div class="h-4 w-1/5 bg-neutral-700 rounded-full ml-8"></div>
-                          </div>
-                      </div>
-                  </div>
-              
-                  <div class="absolute bottom-0 left-0 right-0 h-8 bg-[#303030] flex flex-row items-center border-t border-neutral-800">
-                      
-                      <div class="w-1/3 px-2 flex items-center">
-                          <div class="h-3 w-48 bg-neutral-600 rounded-full opacity-50"></div>
-                      </div>
-                      
-                      <div class="grow flex items-center justify-end px-2 gap-2">
-                          <div class="h-6 w-12 bg-[#444] rounded-lg"></div>
-                          <div class="h-6 border-l border-gray-500 mx-1"></div>
-                          
-                          <div class="flex items-center">
-                              <div class="h-5 w-5 bg-neutral-600 rounded-full mx-1"></div>
-                              <div class="h-6 border-l border-gray-500 mx-1"></div>
-                              <div class="h-3 w-20 bg-neutral-600 rounded-full mx-2"></div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-            </div>
-            <div x-show="!loading" x-cloak id="app" class="grow w-full relative h-screen" style=" display: none;"> 
-                <div id="editor-wrapper"
-                    :class="{ 'h-[calc(100%-31vh)]': $store.bottomBar.move, 'h-[calc(100%-4vh)]': !$store.bottomBar.move, 'ml-[14vw]': $store.ft.move }"
-                    class="w-auto transition-all duration-300">
-                    <div id="editor" class="h-full w-full" x-init="$nextTick(() => {readFromUrl()})"></div>
+
+<head>
+    <title>Web Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="description" content="A web-based code editor using Ace Editor">
+    <link rel="icon" type="image/webp" href="favicon.webp">
+    <script src="/ace/ace.js"></script>
+    <script src="/ace/ext-language_tools.js"></script>
+    <script src="/ace/ext-statusbar.js"></script>
+    <script type="module" src="/src/index.js"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
+    <div id="main-window">
+
+        <body x-data="AceApp(), loading = true" class="h-full flex flex-col overflow-hidden bg-neutral-900">
+            <div id="load-screen">
+                <div x-show="loading" id="skeleton-loader">
+                    <div class="h-screen w-screen bg-neutral-900 relative flex flex-col overflow-hidden animate-pulse">
+
+                        <div class="absolute top-3 right-3 z-10 flex flex-col gap-2">
+                            <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
+                            <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
+                            <div class="h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
+                            <div class="mt-2 h-10 w-10 bg-neutral-800 rounded-full border border-neutral-700"></div>
+                        </div>
+
+                        <div class="grow w-full relative pt-12 px-8">
+                            <div class="space-y-4 opacity-50">
+                                <div class="flex items-center space-x-4">
+                                    <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">1</div>
+                                    <div class="h-4 w-1/3 bg-neutral-700 rounded-full"></div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">2</div>
+                                    <div class="h-4 w-1/2 bg-neutral-800 rounded-full ml-8"></div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">3</div>
+                                    <div class="h-4 w-1/4 bg-neutral-700 rounded-full ml-16"></div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">4</div>
+                                    <div class="h-4 w-2/3 bg-neutral-800 rounded-full ml-8"></div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="h-4 w-8 bg-neutral-800 rounded text-transparent">5</div>
+                                    <div class="h-4 w-1/5 bg-neutral-700 rounded-full ml-8"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="absolute bottom-0 left-0 right-0 h-8 bg-[#303030] flex flex-row items-center border-t border-neutral-800">
+
+                            <div class="w-1/3 px-2 flex items-center">
+                                <div class="h-3 w-48 bg-neutral-600 rounded-full opacity-50"></div>
+                            </div>
+
+                            <div class="grow flex items-center justify-end px-2 gap-2">
+                                <div class="h-6 w-12 bg-[#444] rounded-lg"></div>
+                                <div class="h-6 border-l border-gray-500 mx-1"></div>
+
+                                <div class="flex items-center">
+                                    <div class="h-5 w-5 bg-neutral-600 rounded-full mx-1"></div>
+                                    <div class="h-6 border-l border-gray-500 mx-1"></div>
+                                    <div class="h-3 w-20 bg-neutral-600 rounded-full mx-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
-                    class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
-                    <button @click="openSettingsMenu(); 
+                <div x-show="!loading" x-cloak id="app" class="grow w-full relative h-screen" style=" display: none;">
+                    <div id="editor-wrapper"
+                        :class="{ 'h-[calc(100%-31vh)]': $store.bottomBar.move, 'h-[calc(100%-4vh)]': !$store.bottomBar.move, 'ml-[60vw] sm:ml-[14vw]': $store.ft.move }"
+                        class="w-auto transition-all duration-300">
+                        <div id="editor" class="h-full w-full" x-init="$nextTick(() => {readFromUrl()})"></div>
+                    </div>
+                    <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
+                        class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
+                        <button @click="openSettingsMenu(); 
                             $dispatch('update-msg', { msg: 'Settings menu opened' })" class="side-button group">
-                        <svg class="group-hover:animate-spin">
-                            <use href="sprite.svg#icon-settings"></use>
-                        </svg>
-                    </button>
-                    <button @click="$store.bottomBar.move = !$store.bottomBar.move; 
+                            <svg class="group-hover:animate-spin">
+                                <use href="sprite.svg#icon-settings"></use>
+                            </svg>
+                        </button>
+                        <button
+                            @click="$store.bottomBar.move = !$store.bottomBar.move; 
                             $dispatch('update-msg', { msg: $store.bottomBar.move ? 'Terminal opened' : 'Terminal closed' })"
-                        class="side-button group">
-                        <svg class="group-hover:animate-pulse">
-                            <use href="sprite.svg#icon-terminal"></use>
-                        </svg>
-                    </button>
-                    <template x-if="$store.marked.previewButton">
-                        <button x-data="markedPreview()" @trigger-render.window="fetchPreviewHtml($event.detail.code)"
-                            @click="fetchPreviewHtml(); 
-                                $dispatch('update-msg', { msg: $store.marked.ack ? 'Opening preview in new window' : 'Preview cancelled' })"
                             class="side-button group">
                             <svg class="group-hover:animate-pulse">
-                                <use href="sprite.svg#icon-preview"></use>
+                                <use href="sprite.svg#icon-terminal"></use>
                             </svg>
                         </button>
-                    </template>
-                    <div class=" flex flex-col relative" x-data="{ open: false }" x-on:keydown.esc.prevent.stop="open = false"
-                        x-on:click="open = !open">
-                        <button @click="{ open: true }" class="side-button group">
-                            <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                                <use href="sprite.svg#icon-load"></use>
-                            </svg>
-                        </button>
-                        <div id="dropdown-container" class="flex flex-col" x-cloak x-show="open"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="opacity-0 -translate-y-3"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-10" x-on:click.outside="open = false" role="menu"
-                            aria-labelledby="pm-dropdown">
-                            <button class="side-button mt-2 group" @click="$store.ace.openfile = true">
-                                <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                                    <use href="sprite.svg#icon-computer"></use>
-                                </svg>
-                            </button>
-                            <button class="side-button mt-2 group"
-                                @click="$store.ft.open();$nextTick(() => $store.backend.drawFileTree());">
-                                <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                                    <use href="sprite.svg#icon-server"></use>
-                                </svg>
-                            </button>
-                            <button class="side-button group"
-                                @click="$store.ft.open();$nextTick(() => $store.opfs.drawOPFSFileTree());">
-                                <svg class="h-6 w-6 text-current group-hover:animate-pulse">
-                                    <use href="sprite.svg#icon-file-tree"></use>
-                                </svg>
-                            </button>
-                            <button class="side-button group" @click="$store.ace.save = !$store.ace.save">
+                        <template x-if="$store.marked.previewButton">
+                            <button x-data="markedPreview()"
+                                @trigger-render.window="fetchPreviewHtml($event.detail.code)"
+                                @click="fetchPreviewHtml(); 
+                                $dispatch('update-msg', { msg: $store.marked.ack ? 'Opening preview in new window' : 'Preview cancelled' })" class="side-button group">
                                 <svg class="group-hover:animate-pulse">
-                                    <use href="sprite.svg#icon-save"></use>
+                                    <use href="sprite.svg#icon-preview"></use>
                                 </svg>
                             </button>
+                        </template>
+                        <div class=" flex flex-col relative" x-data="{ open: false }"
+                            x-on:keydown.esc.prevent.stop="open = false" x-on:click="open = !open">
+                            <button @click="{ open: true }" class="side-button group">
+                                <svg class="h-6 w-6 text-current group-hover:animate-pulse">
+                                    <use href="sprite.svg#icon-load"></use>
+                                </svg>
+                            </button>
+                            <div id="dropdown-container" class="flex flex-col" x-cloak x-show="open"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 -translate-y-3"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 translate-y-10" x-on:click.outside="open = false"
+                                role="menu" aria-labelledby="pm-dropdown">
+                                <button class="side-button mt-2 group" @click="$store.ace.openfile = true">
+                                    <svg class="h-6 w-6 text-current group-hover:animate-pulse">
+                                        <use href="sprite.svg#icon-computer"></use>
+                                    </svg>
+                                </button>
+                                <button class="side-button mt-2 group"
+                                    @click="$store.ft.open();$nextTick(() => $store.backend.drawFileTree());">
+                                    <svg class="h-6 w-6 text-current group-hover:animate-pulse">
+                                        <use href="sprite.svg#icon-server"></use>
+                                    </svg>
+                                </button>
+                                <button class="side-button group"
+                                    @click="$store.ft.open();$nextTick(() => $store.opfs.drawOPFSFileTree());">
+                                    <svg class="h-6 w-6 text-current group-hover:animate-pulse">
+                                        <use href="sprite.svg#icon-file-tree"></use>
+                                    </svg>
+                                </button>
+                                <button class="side-button group" @click="$store.ace.save = !$store.ace.save">
+                                    <svg class="group-hover:animate-pulse">
+                                        <use href="sprite.svg#icon-save"></use>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div x-show="$store.ace.save" id="save-dialog" class="modal">
-                    <div id="modal-content"
-                        class="flex  flex-col p-4 gap-4 overflow-hidden rounded-xl border border-neutral-300 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
-                        @click.outside="$store.ace.save = false">
-                        <button @click="() => {$store.ace.save = false}" class="hover:cursor-pointer w-min self-end"
-                            aria-label="close modal">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor"
-                                fill="none" stroke-width="1.4" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <h2 class="text-xl font-bold">Save File</h2>
-                        <hr class="border border-neutral-500 dark:border-neutral-700">
-                        <div id="btn-container" class="flex justify-center flex-col">
-                            <div class=" flex justify-center items-center">
-                              <button @click="$store.ace.isUrl = true; save(); 
+                    <div x-show="$store.ace.save" id="save-dialog" class="modal">
+                        <div id="modal-content"
+                            class="flex  flex-col p-4 gap-4 overflow-hidden rounded-xl border border-neutral-300 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+                            @click.outside="$store.ace.save = false">
+                            <button @click="() => {$store.ace.save = false}" class="hover:cursor-pointer w-min self-end"
+                                aria-label="close modal">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"
+                                    stroke="currentColor" fill="none" stroke-width="1.4" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <h2 class="text-xl font-bold">Save File</h2>
+                            <hr class="border border-neutral-500 dark:border-neutral-700">
+                            <div id="btn-container" class="flex justify-center flex-col">
+                                <div class=" flex justify-center items-center">
+                                    <button @click="$store.ace.isUrl = true; save(); 
                                       $nextTick(() => $dispatch('update-msg', { msg: 'File saved as URL' }))"
-                                  class="bg-blue-500 text-white px-4 py-2 rounded-xl w-fit">
-                                  Save as URL
-                              </button>
-                            </div>
-                            <div class="inline-flex items-start p-2" x-show="$store.ace.languageSelected === 'markdown'">
-                              <label class="flex items-start cursor-pointer relative" for="check-with-description">
-                                <input type="checkbox"
-                                  x-model="$store.ace.render"
-                                  class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-neutral-800 checked:border-neutral-800"
-                                  id="check-with-description" />
-                                <span class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"
-                                    stroke="currentColor" stroke-width="1">
-                                    <path fill-rule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clip-rule="evenodd"></path>
-                                  </svg>
-                                </span>
-                              </label>
-                              <label class="cursor-pointer ml-2 text-sm" for="check-with-description">
-                                <div>
-                                  <p class="font-medium">
-                                    Render markdown ?
-                                  </p>
-                                  <p class="font-small">
-                                    auto renders the markdown on clicking the url.
-                                  </p>
+                                        class="bg-blue-500 text-white px-4 py-2 rounded-xl w-fit">
+                                        Save as URL
+                                    </button>
                                 </div>
-                              </label>
+                                <div class="inline-flex items-start p-2"
+                                    x-show="$store.ace.languageSelected === 'markdown'">
+                                    <label class="flex items-start cursor-pointer relative"
+                                        for="check-with-description">
+                                        <input type="checkbox" x-model="$store.ace.render"
+                                            class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-neutral-800 checked:border-neutral-800"
+                                            id="check-with-description" />
+                                        <span
+                                            class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5"
+                                                viewBox="0 0 20 20" fill="currentColor" stroke="currentColor"
+                                                stroke-width="1">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <label class="cursor-pointer ml-2 text-sm" for="check-with-description">
+                                        <div>
+                                            <p class="font-medium">
+                                                Render markdown ?
+                                            </p>
+                                            <p class="font-small">
+                                                auto renders the markdown on clicking the url.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
-                        <h4 class="text-sm italic text-neutral-700 max-w-20vw w-auto">The "Save as Url" option has <span
-                                class="text-neutral-500"> Size Limitation ( tested - 20,000 Lines of code ) </span> and hence
-                            for longer
-                            codes please use the file download below. Also <span class="text-neutral-500">longer code means
-                                longer and ugly url</span> </h4>
-                        <span class="self-center">or</span>
-                        <div x-data="{ filename: '', btnContent: 'Download File' }"
-                            x-effect="$store.ace.openMode === 'backend' ? btnContent = 'Save to Backend' : $store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back' : $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
-                            <div x-show="$store.ace.openMode === 'fileinput'" class="mb-4">
-                                <label for="filename" class="block mb-2">Filename:</label>
-                                <input type="text" id="filename" x-model="filename"
-                                  placeholder="Enter here...(default: download.txt)"
-                                    class="w-full p-2 border border-gray-300 rounded-3xl ">
-                                <h4 class="text-sm italic text-neutral-700"> Please do not forget to enter
-                                    <span class="text-neutral-500">the file extension (eg .txt, .py...) of your file</span>
-                                </h4>
-                            </div>
-        
-                            <div class="h-min w-full flex justify-center">
-                                <button
-                                    @click="save(filename);
+                            <h4 class="text-sm italic text-neutral-700 max-w-20vw w-auto">The "Save as Url" option has
+                                <span class="text-neutral-500"> Size Limitation ( tested - 20,000 Lines of code )
+                                </span> and hence
+                                for longer
+                                codes please use the file download below. Also <span class="text-neutral-500">longer
+                                    code means
+                                    longer and ugly url</span> </h4>
+                            <span class="self-center">or</span>
+                            <div x-data="{ filename: '', btnContent: 'Download File' }"
+                                x-effect="$store.ace.openMode === 'backend' ? btnContent = 'Save to Backend' : $store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back' : $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
+                                <div x-show="$store.ace.openMode === 'fileinput'" class="mb-4">
+                                    <label for="filename" class="block mb-2">Filename:</label>
+                                    <input type="text" id="filename" x-model="filename"
+                                        placeholder="Enter here...(default: download.txt)"
+                                        class="w-full p-2 border border-gray-300 rounded-3xl ">
+                                    <h4 class="text-sm italic text-neutral-700"> Please do not forget to enter
+                                        <span class="text-neutral-500">the file extension (eg .txt, .py...) of your
+                                            file</span>
+                                    </h4>
+                                </div>
+
+                                <div class="h-min w-full flex justify-center">
+                                    <button
+                                        @click="save(filename);
                                     $store.ace.openMode !== 'opfs' ? $dispatch('update-msg', { msg: 'File saved with filename: ' + filename }): null"
-                                    class="bg-green-500 text-white px-4 py-2 rounded-xl" x-text="btnContent"></button>
+                                        class="bg-green-500 text-white px-4 py-2 rounded-xl"
+                                        x-text="btnContent"></button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div x-show="$store.ace.openfile" id="open-dialog" class="modal">
-                    <div id="modal-content"
-                        class="flex  flex-col p-4 gap-4 overflow-hidden rounded-xl border border-neutral-300 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
-                        @click.outside="$store.ace.openfile = false" @click.stop>
-                        <button @click="() => {$store.ace.openfile = false}" class="hover:cursor-pointer w-min self-end"
-                            aria-label="close modal">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" stroke="currentColor"
-                                fill="none" stroke-width="1.4" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <h2 class="text-xl font-bold mb-4 text-center">Open File</h2>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button @click="$store.ace.openMode = 'fileinput'; openFile()"
-                                class="bg-blue-500 text-white px-4 py-2 rounded-xl">Open using File Input</button>
-                            <button @click="$store.ace.openMode = 'fsapi'; openFile()"
-                                class="bg-green-500 text-white px-4 py-2 rounded-xl">Open using File System Access API</button>
-                            <h4 class="col-span-2 text-sm italic text-neutral-700">The <span class="text-neutral-500">File
-                                    System Access API </span> may not be supported in all browsers. Also cannot open sensitive
-                                files for security reasons. <span class="text-neutral-500">But it allows direct file access.
-                                    The other button has no direct save feature.
-                                    User must download the file and save manually</span></h4>
+                    <div x-show="$store.ace.openfile" id="open-dialog" class="modal">
+                        <div id="modal-content"
+                            class="flex flex-col p-4 gap-4 w-fit max-w-[90vw] overflow-hidden rounded-xl border border-neutral-300 bg-white text-neutral-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
+                            @click.outside="$store.ace.openfile = false" @click.stop>
+                            <button @click="() => {$store.ace.openfile = false}"
+                                class="hover:cursor-pointer w-min self-end" aria-label="close modal">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"
+                                    stroke="currentColor" fill="none" stroke-width="1.4" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <h2 class="text-xl font-bold mb-4 text-center">Open File</h2>
+                            <div class="flex flex-col gap-2 items-center">
+                                <div class="inline-flex flex-col sm:flex-row gap-4 items-center">
+                                    <button @click="$store.ace.openMode = 'fileinput'; openFile()"
+                                        class="inline-flex justify-center bg-blue-500 text-white px-4 py-2 rounded-xl min-w-[240px]">Open using File
+                                        Input</button>
+                                    <button @click="$store.ace.openMode = 'fsapi'; openFile()"
+                                        class="inline-flex justify-center bg-green-500 text-white px-4 py-2 rounded-xl min-w-[240px]">Open using File
+                                        System Access API</button>
+                                </div>
+                                <h4 class="col-span-2 text-sm italic text-neutral-700">The <span
+                                        class="text-neutral-500">File
+                                        System Access API </span> may not be supported in all browsers. Also cannot open
+                                    sensitive
+                                    files for security reasons. <span class="text-neutral-500">But it allows direct file
+                                        access.
+                                        The other button has no direct save feature.
+                                        User must download the file and save manually</span></h4>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div id="bottom-bar" :class="{'h-[31vh]': $store.bottomBar.move}"
-                    class="absolute bottom-0 left-0 right-0 flex flex-col z-15 transition-all duration-300">
-                    <div id="status-bar" x-data="statusbar" class="flex flex-row h-8 transition-all duration-300"
-                        :class="{'ml-[14vw]': $store.ft.move}">
-                        <div id="status-bar-right"  class="bg-[#303030]  px-2 flex items-center">
-                            <span @update-msg.window="
+                    <div id="bottom-bar" :class="{'h-[31vh]': $store.bottomBar.move}"
+                        class="absolute bottom-0 left-0 right-0 flex flex-col z-15 transition-all duration-300">
+                        <div id="status-bar" x-data="statusbar" class="flex flex-row h-8 transition-all duration-300"
+                            :class="{'ml-[60vw] sm:ml-[14vw]': $store.ft.move}">
+                            <div id="status-bar-right" class="bg-[#303030]  px-2 flex items-center">
+                                <span @update-msg.window="
                                 flash($event.detail.msg,
-                                      $event.detail.timeout === 0 ? 0 : 3000)" class="text-white text-center" x-text="message">
-                            </span>
-                        </div>
-                        <div id="status-bar-left" class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
-                            <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg min-w-4 px-2 mx-2"></div>
-                            <div class="h-6 border-l border-gray-500"></div>
-                            <div id="language-status" x-init="init()" class="flex flex-row items-center">
-                                <div id="language-icon" class="text-white mx-1 h-6 w-6 rounded-2xl "><img
-                                        class="object-contain rounded-2xl w-full h-full" :src="currentIcon"></div>
+                                      $event.detail.timeout === 0 ? 0 : 3000)" class="text-white text-center"
+                                    x-text="message">
+                                </span>
+                            </div>
+                            <div id="status-bar-left"
+                                class=" bg-[#303030]  grow flex items-center justify-end select-none px-2">
+                                <div x-init="initStatusBar()" class="text-white bg-[#444] rounded-lg min-w-4 px-2 mx-2">
+                                </div>
                                 <div class="h-6 border-l border-gray-500"></div>
-                                <span class="text-white px-1" x-text="$store.ace.languageSelected"></span>
+                                <div id="language-status" x-init="init()" class="flex flex-row items-center">
+                                    <div id="language-icon" class="text-white mx-1 h-6 w-6 rounded-2xl "><img
+                                            class="object-contain rounded-2xl w-full h-full" :src="currentIcon"></div>
+                                    <div class="h-6 border-l border-gray-500"></div>
+                                    <span class="text-white px-1" x-text="$store.ace.languageSelected"></span>
+                                </div>
                             </div>
                         </div>
+                        <template x-if="$store.bottomBar.move">
+                            <div x-ref="terminal" x-data="terminal" class="overflow-hidden transition-all duration-300"
+                                :class="{'ml-[60vw] sm:ml-[14vw]': $store.ft.move}">
+                            </div>
+                        </template>
                     </div>
-                    <template x-if="$store.bottomBar.move">
-                        <div x-ref="terminal" x-data="terminal" class="overflow-hidden transition-all duration-300"
-                            :class="{'ml-[14vw]': $store.ft.move}">
-                        </div>
-                    </template>
-                </div>
-                <div id="file-tree-container" x-show="$store.ft.move"
-                    class="flex flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
-                    <div id="file-tree-closeBtn" class="flex w-full"><button @click="$store.ft.open()"
-                            class="ml-auto cursor-pointer">🗙</button></div>
-                    <div id="file-tree-mkdir" x-data="{
+                    <div id="file-tree-container" x-show="$store.ft.move"
+                        class="flex flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[60vw] sm:w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
+                        <div id="file-tree-closeBtn" class="flex w-full"><button @click="$store.ft.open()"
+                                class="ml-auto cursor-pointer">🗙</button></div>
+                        <div id="file-tree-mkdir" x-data="{
                             askMkdir() {
                                 const folderName = prompt('Enter new Folder Name ( use / for absolute path)\n Default to last Double Clicked Directory', 'NewFolder');
                                 if(folderName){
@@ -294,13 +318,14 @@
                                 }
                             }
                         }" class="flex w-full my-1">
-                        <div class="ml-auto flex">
-                            <button @click="askTouch()" class="ml-2 cursor-pointer">🖹</button>
-                            <button @click="askMkdir()" class="ml-2 cursor-pointer">🗀</button>
+                            <div class="ml-auto flex">
+                                <button @click="askTouch()" class="ml-2 cursor-pointer">🖹</button>
+                                <button @click="askMkdir()" class="ml-2 cursor-pointer">🗀</button>
+                            </div>
                         </div>
+                        <div id="file-tree" class="h-max w-full"></div>
                     </div>
-                    <div id="file-tree" class="h-max w-full"></div>
-                </div>   
-          </div>
-    </body>
+                </div>
+        </body>
+
 </html>
