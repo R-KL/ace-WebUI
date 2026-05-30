@@ -20,7 +20,7 @@ All web assets (HTML, CSS, JavaScript) are embedded into the Rust executable at 
 - [x] **Add File Tree**
 - [x] **Add Renderer for Markdown Files**
 - [x] ~**Maybe Add Latex and Typst Support**~ (For now, math can be rendered in markdown using LaTex syntax and the TeMML library)
-- [ ] **Add the backend with the same features released last time**
+- [x] **Add the backend with the same features released last time**
 
 ## To Do Next Release (0.2.0)
 

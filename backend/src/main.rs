@@ -1,135 +1,155 @@
 use axum::{
-    Router, 
-    extract::{Json, State}, 
-    response, 
-    routing::{get, post, put}
+    Router, extract::{Json, State}, http::StatusCode, response::{self, IntoResponse}, routing::{get, post, put}
 };
 
-use std::path::{Path, PathBuf};
+use log::{debug, info, warn, LevelFilter};
+
+use std::io::Write;
+use std::path::Path;
 use std::sync::Arc;
-use tower_http::services::ServeDir;
+
 use tokio::signal;
-mod structs;
-use structs::{EditorConfig, Config};
+use tower_http::services::ServeDir;
+
+mod definitions;
+use definitions::{Config, EditorConfig, EditorVfs, ReDb};
 
 struct AppState {
-    filesystem: Arc<structs::FileSystem>,
-    config: Arc<structs::Config>,
+    config: Arc<definitions::Config>,
+    fs: Arc<definitions::EditorFs>,
 }
-  //////////////////////
- // Helper Functions //
 //////////////////////
-fn info(str: &str) -> () {
-    println!("Info: {}", str);
-}
-fn warn(str: &str) -> () {
-    println!("Warning: {}", str);
-}
-
-
-async fn write_handler(
-    State(app_state): State<Arc<AppState>>,
-    Json(req): Json<structs::FileRequest>,
-) -> String {
-    if let Some(content) = req.content {
-        let content_str = app_state.filesystem.write_file(&req.path, &content).await;
-        info(format!("Wrote {} to {}",&content.capacity(),&req.path).as_str());
-         return content_str;
-    } else {
-        "Error: content is required for write operation".to_string()
-    }
-}
-
-fn clean_path(path: &PathBuf) -> String {
-    path.components()
-        .map(|c| c.as_os_str().to_string_lossy().to_string())
-        .collect::<Vec<_>>()
-        .join("/") //bascially converted the path from pathbuf to a string.
+// Helper Functions //
+//////////////////////
+async fn shutdown() {
+    signal::ctrl_c()
+        .await
+        .expect("Couldnt listen to ctrl-c event");
+    info!("Recived shutdown signal, shutting down server gracefully...(wait...)");
 }
 async fn get_file_tree(
     State(app_state): State<Arc<AppState>>,
-    Json(req): Json<structs::FileTreeRequest>,
-) -> Result<response::Json<structs::FileHandle>, String> {
+    Json(req): Json<definitions::FileTreeRequest>,
+) -> Result<response::Json<definitions::FileHandle>, String> {
     if let Some(path) = req.path {
-        let root_path: PathBuf = Path::new(&path).to_path_buf();
-        let file_handle: structs::FileHandle = app_state.filesystem.make_filehandle_tree(&root_path).await;
+        let root_path = match app_state.fs.vfs.root().join(path) {
+            Ok(path) => path, 
+            Err(e) => {
+                warn!("Could not read the root directory due to {}, using default root",e);
+                app_state.fs.vfs.root()
+            }
+        };
+        let file_handle: definitions::FileHandle =
+            match app_state.fs.vfs.make_filehandle_tree(&root_path).await {
+                Ok(handle) => handle,
+                Err(e) => {
+                    warn!("Error generating file tree: {}", e);
+                    definitions::FileHandle::default()
+                }
+            };
         let file_handle_json = response::Json(file_handle);
         Ok(file_handle_json)
     } else {
         Err("Error: path is required for get_file_tree operation".to_string())
     }
 }
-async fn shutdown() {
-    signal::ctrl_c().await.expect("Couldnt listen to ctrl-c event");
+  ///////////////////////////
+ //     Axum Handlers     //
+///////////////////////////
+async fn fs_write_handler(
+    State(app_state): State<Arc<AppState>>,
+    Json(req): Json<definitions::FileRequest>,
+) {
+    if let Some(content) = req.content {
+        let capacity =  content.len();
+        let path = req.path.clone();
+        match app_state.fs.vfs.write(req.path, content).await {
+            Ok(success) => {
+                if success {
+                    info!("Wrote {} bytes to {}",capacity, &path);
+                } else {
+                    warn!("Couldn't write to {}", &path);
+                }
+            },
+            Err(e) => {
+                warn!("Could not write to {} due to an error: {}", path, e);
+            }
+        }
+    } else {
+        warn!("Error: content is required for write operation");
+    }
 }
+async fn fs_read_handler(State(app_state): State<Arc<AppState>>,Json(req): Json<definitions::FileRequest>) -> impl IntoResponse {
+    match app_state.fs.vfs.read(req.path.clone()).await {
+        Ok(content) => {
+            return (StatusCode::OK, content);
+        },
+        Err(e) => {
+            warn!("{}",e);
+            return (StatusCode::NOT_FOUND, "Error 404".to_string());
+        }
+    } 
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Settings.yaml and editor-state.json(for editor) parsing code begin here //
 /////////////////////////////////////////////////////////////////////////////
-fn read_config() -> structs::Config {
-    let Ok(config_str) = std::fs::read_to_string("settings.yaml") else {
-        warn("Cannot read or find settings.yaml file using default settings");
+async fn read_config() -> definitions::Config {
+    let Ok(config_str) = tokio::fs::read_to_string("settings.yaml").await else {
+        warn!("Cannot read or find settings.yaml file using default settings");
         return Config::default();
     };
     let Ok(parsed) = serde_yaml::from_str(&config_str) else {
-        warn("Cannot parse settings.yaml file or settings.yaml is malformed");
+        warn!("Cannot parse settings.yaml file or settings.yaml is malformed");
         return Config::default();
     };
-    return parsed;
+    parsed
 }
 async fn write_editor_state(State(app_state): State<Arc<AppState>>, Json(req): Json<EditorConfig>) {
-    let Ok(content) = serde_json::to_string(&req) else {
-        warn("Cannot parse the Editor State sent by client, aborting editor state save routine");
-        return;
+    match app_state.fs.db.write(req) {
+        Ok(_) => info!("Wrote user config to database"),
+        Err(e) => {
+            warn!("Could not write to database due to error: {}",e);
+        }
+    }
+}
+async fn read_editor_state(State(app_state):State<Arc<AppState>>) -> Json<EditorConfig> {
+    let Some(editor_state) = app_state.fs.db.read(app_state.config.editor.clone()) else {
+        return Json(EditorConfig::default());
     };
-    let Some(path) = app_state.config.storage.editor_state.as_ref() else {
-        warn("Cannot read editor_state file,using default one");
-        return;
-    };
-    app_state.filesystem.write_file(path.as_str(),content.as_str()).await;
+    Json(editor_state)
 }
 ////////////////////////////////////////////
 // The backend WebServer code begins here //
 ////////////////////////////////////////////
-async fn server() {
+async fn server(config: Config) {
     let app_state = Arc::new(AppState {
-        filesystem: Arc::new(structs::FileSystem::new(
-            read_config()
-                .storage
-                .project_folder
-                .as_deref()
-                .unwrap(),
-        )),
-        config: Arc::new(read_config()),
+        fs: Arc::new(
+            definitions::EditorFs { vfs: EditorVfs::new(&config.storage.project_folder.as_deref().unwrap()) , db: ReDb::new() }
+        ),
+        config: Arc::new(config),
     });
     let editor: Router<Arc<AppState>> = Router::<Arc<AppState>>::new()
         .route("/read",
-            get(|State(app_state):State<Arc<AppState>>| async move {
-                app_state.filesystem.read_file(app_state.config.storage.editor_state.as_ref().expect("Cannot Read editor_state file").as_str()).await
-            }))
+            get(read_editor_state))
         .route("/write",put(write_editor_state));
     let file_system: Router<Arc<AppState>> = Router::<Arc<AppState>>::new()
-        .route(
-            "/read",
-            post(
-                |State(app_state): State<Arc<AppState>>, Json(req): Json<structs::FileRequest>| async move {
-                    app_state.filesystem.read_file(&req.path).await
-                },
-            ),
-        )
-        .route("/write", post(write_handler))
+        .route( "/read", post(fs_read_handler))
+        .route( "/write", post(fs_write_handler))
         .route(
             "/get_root",
             post(|State(app_state): State<Arc<AppState>>| async move {
-                app_state.filesystem.get_root().await
+                app_state.fs.vfs.root().as_str().to_owned()
             }),
         )
         .route("/get_file_tree", post(get_file_tree));
-
-    let app: Router = Router::<Arc<AppState>>::new()
-        .route("/hello", get(|| async { "Hello World" }))
+    let api = Router::<Arc<AppState>>::new()
         .nest("/fs", file_system)
+        .nest("/editor", editor);
+    let app: Router = Router::<Arc<AppState>>::new()
+        .route("/hello", get(|| async { "Hi, This is AceWebUI" }))
         .nest_service("/", ServeDir::new("../web/dist"))
-        .nest("/editor", editor)
+        .nest("/api", api)
         .with_state(app_state.clone());
     let lister = tokio::net::TcpListener::bind(app_state.as_ref().config.server.get_addr())
         .await
@@ -145,9 +165,33 @@ async fn server() {
 //////////////////////////////////////////////
 #[tokio::main]
 async fn main() {
-    println!("Reading config from settings.yaml...");
-    let config: structs::Config = read_config();
-    println!("Config loaded successfully: {:#?}\n", config);
-    println!("Starting a new server at {}", config.server.get_addr());
-    server().await;
+    env_logger::Builder::new()
+        .filter_level(LevelFilter::Info) // Set your baseline filter
+        .format(|buf, record| {
+            // 1. Get default env_logger components
+            let ts = buf.timestamp(); // Default timestamp
+            let level_style = buf.default_level_style(record.level()); // Default color style
+            let level = record.level(); // Default level string
+
+            // 2. Extract your custom short filename (e.g., "vfs.rs")
+            let full_path = record.file().unwrap_or("unknown.rs");
+            let filename = Path::new(full_path)
+                .file_name()
+                .and_then(|os_str| os_str.to_str())
+                .unwrap_or(full_path);
+
+            // 3. Assemble: [default format till level] + filename + [default rest]
+            writeln!(
+                buf,
+                "[{ts} {level_style}{level:<5}{level_style:#}] [{filename}] {}",
+                record.args() // Log payload
+            )
+        })
+        .init();
+    info!("Starting editor webserver");
+    info!("Reading config from settings.yaml...");
+    let config: definitions::Config = read_config().await;
+    debug!("Config loaded successfully: {:#?}\n", &config);
+    info!("Starting a new server at {}", &config.server.get_addr());
+    server(config).await;
 }

@@ -1,141 +1,173 @@
 @import "tailwindcss";
 @theme {
-    --color-github:#0d1117;
+  --color-github: #0d1117;
 }
 
-/* Side Button Styles */
+/* ====================
+   Side Button Styles
+   ==================== */
 .side-button {
-    @apply bg-[#1e1e1e] hover:bg-neutral-400 shadow-lg rounded-3xl p-2 m-1;
-} 
+  @apply bg-[#1e1e1e] hover:bg-neutral-400 shadow-lg rounded-3xl p-2 m-1 transition-colors;
+}
 .side-button svg {
-    @apply text-neutral-400 w-4 h-4 lg:w-7 lg:h-7 group-hover:text-[#1e1e1e];
+  @apply text-neutral-400 w-4 h-4 lg:w-7 lg:h-7 group-hover:text-[#1e1e1e] transition-colors;
 }
 #close-menu-button {
-    @apply hover:bg-[#444] bg-[#303030] shadow-lg rounded-xl p-2 m-1 w-full ;
+  @apply hover:bg-[#444] bg-[#303030] shadow-lg rounded-xl p-2 m-1 w-full transition-colors;
 }
 .resizable {
-    @apply resize overflow-auto;
+  @apply resize overflow-auto;
 }
+
+/* ====================
+   Modal Base Styles
+   ==================== */
 .modal {
-    @apply bg-github/80 fixed inset-0 z-30 backdrop-opacity-90 flex items-end justify-center p-4 pb-8  sm:items-center lg:p-8;
+  @apply bg-github/80 fixed inset-0 z-30 backdrop-opacity-90 flex items-end justify-center p-4 pb-8 sm:items-center lg:p-8;
 }
 .modal button {
-    @apply hover:brightness-120 cursor-pointer;
-}
-/* Settings Menu Styles */
-#ace_settingsmenu, #kbshortcutmneu {
-    @apply bg-[#2b2b2b] text-white shadow-lg overflow-x-hidden pr-3.5 pl-3.5 rounded-l-xl w-75 absolute mr-0.5 p-2 bottom-3 right-3 top-3 z-50 cursor-default;
+  @apply hover:brightness-125 cursor-pointer;
 }
 
-#ace_settingsmenu::-webkit-scrollbar {
-    @apply visible bg-[#2b2b2b] w-2.5 rounded-2xl;
-    margin-left: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: #444 #2b2b2b;
-}
-#ace_settingsmenu::-webkit-scrollbar-thumb {
-    @apply bg-[#444] rounded-2xl ;
-}
-#ace_settingsmenu::-webkit-scrollbar-track {
-    @apply bg-[#2b2b2b] rounded-2xl ;
-    
-}
+/* =======================================
+   Settings Menu & Ace Injected Elements
+   ======================================= */
 .ace_optionsMenuEntry {
-    @apply flex items-center justify-between grow p-2 rounded-xl mt-1 hover:bg-[#3d3d3d] bg-[#303030];
+  @apply flex items-center justify-between p-3 rounded-xl mt-2 hover:bg-[#3d3d3d] bg-[#303030] transition-colors;
+  width: 100% !important;
 }
-#controls select {
-    @apply bg-[#303030] hover:bg-[#444] items-center rounded-2xl m-1 w-full ;
-
+.ace_optionsMenuEntry > div {
+  @apply flex flex-wrap justify-end gap-3 items-center;
 }
-#mode,#theme {
-    @apply text-white p-1 rounded-2xl w-auto ;
+.ace_optionsMenuEntry select {
+  @apply bg-[#1e1e1e] border border-neutral-700 hover:bg-[#2b2b2b] items-center text-white rounded-lg px-2 py-1 focus:outline-none transition-colors cursor-pointer;
 }
-#-mode::-webkit-scrollbar, #-theme::-webkit-scrollbar {
-    @apply visible bg-[#2b2b2b] w-2.5 rounded-2xl;
+.ace_optionsMenuEntry select option {
+  @apply bg-[#303030] text-white;
 }
-
-#-mode,#-theme {
-    scrollbar-width: thin;
-    scrollbar-color: #444 #2b2b2b;
-}
-#-mode::-webkit-scrollbar-thumb, #-theme::-webkit-scrollbar-thumb {
-    @apply bg-[#444] rounded-2xl;
-}
-#mode-label,#theme-label {
-    @apply p-2;
-}
-#-mode option,#-theme option,#-theme optgroup {
-    @apply flex rounded-2xl bg-[#303030];
-}
-#-theme option:checked,#-mode option:checked {
-    @apply bg-[#202020] shadow-md;
-}
-#-fontSize {
-    @apply items-center rounded-2xl m-1 w-full ;
-}
-#keyboardHandler-label label {
-    @apply flex-col text-white font-thin;
-}
-.ace_optionsMenuEntry input{
-    @apply mr-2 w-5 h-5 rounded ;
-}
-.ace_optionsMenuEntry input:checked{
-    @apply bg-blue-500;
-}
-.ace_optionsMenuEntry button[ace_selected_button=true] {
-    @apply bg-[#444]  border flex grow shadow-md;
+.ace_optionsMenuEntry input[type="number"],
+.ace_optionsMenuEntry input[type="text"] {
+  @apply bg-[#1e1e1e] border border-neutral-700 rounded-lg px-2 py-1 text-white text-center w-16 focus:outline-none focus:border-neutral-400 transition-colors;
 }
 .ace_optionsMenuEntry button {
-    @apply bg-blend-darken bg-[#1e1e1e] focus:outline-none border m-1 text-center flex items-start grow rounded-2xl text-white p-1 w-20;
+  @apply bg-[#1e1e1e] border border-neutral-700 focus:outline-none text-center inline-flex justify-center items-center rounded-2xl text-white py-1 px-3 min-w-[4rem] transition-colors cursor-pointer shadow-sm;
 }
 .ace_optionsMenuEntry button:hover {
-    @apply border-[#2b2b2b] bg-transparent;
+  @apply border-neutral-500 bg-[#2b2b2b];
+}
+.ace_optionsMenuEntry button[ace_selected_button=true] {
+  @apply bg-[#444] border-neutral-400 shadow-md;
+}
+.ace_optionsMenuEntry label {
+  @apply text-white font-thin cursor-pointer;
+}
+
+/* =======================================
+   Custom Scrollbar: Settings Menu Modal
+   ======================================= */
+#settings-menu .overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a transparent;
+}
+#settings-menu .overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+#settings-menu .overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+#settings-menu .overflow-y-auto::-webkit-scrollbar-thumb {
+  @apply bg-neutral-600 rounded-full border-2 border-neutral-900;
+}
+#settings-menu .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-500;
+}
+#controls {
+    width: 100%;
 }
 #more-controls {
-    @apply flex flex-col ;
+    width: 100%;
+}
+#ace-version {
+    @apply text-sm text-neutral-500 mt-6;
+}
+/* =============================
+   Ace Editor Custom Scrollbar 
+   ============================= */
+.ace_editor .ace_sb-v {
+  background-color: #1e1e1e !important;
+  border-left: 1px solid #333 !important;
+  width: 14px !important;
+}
+.ace_editor .ace_sb-h {
+  background-color: #1e1e1e !important;
+  border-top: 1px solid #333 !important;
+  height: 14px !important;
+}
+.ace_editor .ace_sb-v > div,
+.ace_editor .ace_sb-h > div {
+  background-color: #303030 !important;
+  border-radius: 10px !important;
+  border: 3px solid #1e1e1e !important; 
+  background-clip: padding-box !important;
+}
+.ace_editor .ace_sb-v > div:hover,
+.ace_editor .ace_sb-h > div:hover {
+  background-color: #666 !important;
+}
+.ace_editor .ace_sb-v > canvas {
+  opacity: 0.7 !important;
+  pointer-events: none !important;
 }
 
-/*<=============CheckBox to  Toggle Switch=========START=======>  */
-#ace_settingsmenu input[type="checkbox"] {
+/* =============================
+   CheckBox -->  Toggle Switch
+   ============================= */
+.ace_optionsMenuEntry input[type="checkbox"] {
   appearance: none;
-  @apply w-8 h-5 bg-neutral-600 appearance-none rounded-[20px] relative cursor-pointer transition-colors duration-300;
+  @apply w-10 h-5 bg-neutral-700 rounded-[20px] relative cursor-pointer transition-colors duration-300 shadow-inner flex items-center m-0;
+}
+.ace_optionsMenuEntry input[type="checkbox"]::after {
+  content: "";
+  @apply absolute w-4 h-4 bg-neutral-400 rounded-full left-0.5 transition-transform duration-300 shadow-sm;
+}
+.ace_optionsMenuEntry input[type="checkbox"]:checked {
+  @apply bg-neutral-900 border border-neutral-700;
+}
+.ace_optionsMenuEntry input[type="checkbox"]:checked::after {
+  @apply transform translate-x-5 bg-neutral-300;
 }
 
-#ace_settingsmenu input[type="checkbox"]::after {
-    content: "";
-    @apply absolute w-3.5 h-3 bg-neutral-800 rounded-2xl mt-1 m-0.5 transition-transform duration-300;
-
-}
-#ace_settingsmenu input[type="checkbox"]:checked {
-    @apply bg-neutral-800;
-}
-#ace_settingsmenu input[type="checkbox"]:checked::after {
-  @apply transform translate-x-3 bg-neutral-600;
-}
-/*<=============CheckBox to  Toggle Switch=========END=======>  */
+/* ====================
+   Status Bar Styles
+   ==================== */
 .status-bar-ace {
-    @apply bg-[#1e1e1e] text-white  grow items-center px-1 ;
+  @apply bg-[#1e1e1e] text-white grow items-center px-1;
 }
+
+/* ====================
+   File Tree Styles
+   ==================== */
 #file-tree div:hover, 
 #file-tree summary:hover {
-    background-color: #333;
+  background-color: #333;
 }
-#file-tree summary::-webkit-details-marker { display: none; }
-#file-tree summary { list-style: none; display: flex; align-items: center; gap: 5px; }
-
+#file-tree summary::-webkit-details-marker { 
+  display: none; 
+}
+#file-tree summary { 
+  list-style: none; display: flex; align-items: center; gap: 5px; cursor: pointer;
+}
 #file-tree summary::before {
   content: '';
   display: inline-block;
   width: 12px;
   height: 12px;
   background-color: currentColor;
-
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
   mask-repeat: no-repeat;
   transition: transform 0.2s ease;
 }
-
 #file-tree details[open] > summary::before {
   transform: rotate(90deg);
 }

@@ -16,3 +16,8 @@ log = "0.4"
 env_logger = "0.11"
 mime_guess = "2"
 async-recursion = "1.1.1"
+redb = "4.1.0"
+rkyv = "0.8.16"
+vfs = { version = "0.13.0", features = ["async-vfs"] }
+futures = "0.3.32"
+serde_with = "3.0"

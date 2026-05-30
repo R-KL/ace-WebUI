@@ -10,6 +10,7 @@
     <script src="/ace/ace.js"></script>
     <script src="/ace/ext-language_tools.js"></script>
     <script src="/ace/ext-statusbar.js"></script>
+    <script src="/ace/ext-options.js"></script>
     <script type="module" src="/src/index.js"></script>
     <style>
         [x-cloak] {
@@ -18,10 +19,9 @@
     </style>
 </head>
 
-<body x-data="AceApp()" class="h-full flex flex-col overflow-hidden bg-neutral-900">
+<body class="h-full flex flex-col overflow-hidden bg-neutral-900">
     <div id="main-window">
-
-        <body x-data="AceApp(), loading = true" class="h-full flex flex-col overflow-hidden bg-neutral-900">
+        <main x-data="AceApp(), loading = true" class="h-full flex flex-col overflow-hidden bg-neutral-900">
             <div id="load-screen">
                 <div x-show="loading" id="skeleton-loader">
                     <div class="h-screen w-screen bg-neutral-900 relative flex flex-col overflow-hidden animate-pulse">
@@ -86,8 +86,8 @@
                     </div>
                     <div id="floating-buttons" :class="$store.ace.decOpacity && 'opacity-20'"
                         class="top-3 flex flex-col absolute rounded-xl right-3 z-10">
-                        <button @click="openSettingsMenu(); 
-                            $dispatch('update-msg', { msg: 'Settings menu opened' })" class="side-button group">
+                        <button @click="$store.settingsMenu.toggle(); $dispatch('update-msg', {
+                            msg: 'Settings menu opened' })" class="side-button group">
                             <svg class="group-hover:animate-spin">
                                 <use href="sprite.svg#icon-settings"></use>
                             </svg>
@@ -207,7 +207,8 @@
                                 for longer
                                 codes please use the file download below. Also <span class="text-neutral-500">longer
                                     code means
-                                    longer and ugly url</span> </h4>
+                                    longer and ugly url</span>
+                            </h4>
                             <span class="self-center">or</span>
                             <div x-data="{ filename: '', btnContent: 'Download File' }"
                                 x-effect="$store.ace.openMode === 'backend' ? btnContent = 'Save to Backend' : $store.ace.openMode === 'fsapi' ? btnContent = 'Save File Back' : $store.ace.openMode === 'opfs' ? btnContent = 'Save to OPFS' : btnContent = 'Download File' ">
@@ -247,10 +248,12 @@
                             <div class="flex flex-col gap-2 items-center">
                                 <div class="inline-flex flex-col sm:flex-row gap-4 items-center">
                                     <button @click="$store.ace.openMode = 'fileinput'; openFile()"
-                                        class="inline-flex justify-center bg-blue-500 text-white px-4 py-2 rounded-xl min-w-[240px]">Open using File
+                                        class="inline-flex justify-center bg-blue-500 text-white px-4 py-2 rounded-xl min-w-60">Open
+                                        using File
                                         Input</button>
                                     <button @click="$store.ace.openMode = 'fsapi'; openFile()"
-                                        class="inline-flex justify-center bg-green-500 text-white px-4 py-2 rounded-xl min-w-[240px]">Open using File
+                                        class="inline-flex justify-center bg-green-500 text-white px-4 py-2 rounded-xl mask-linear-to-yellow-60">Open
+                                        using File
                                         System Access API</button>
                                 </div>
                                 <h4 class="col-span-2 text-sm italic text-neutral-700">The <span
@@ -326,6 +329,42 @@
                         <div id="file-tree" class="h-max w-full"></div>
                     </div>
                 </div>
-        </body>
+        </main>
+        </main>
+    </div>
+    <div id="settings-menu" x-data="settingsMenu()" x-show="$store.settingsMenu.open" x-cloak
+        class="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+
+        <div @click.outside="$store.settingsMenu.toggle()"
+            class="flex flex-col pl-6 p-4 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-neutral-700 bg-neutral-900 shadow-2xl">
+
+            <header class="flex justify-between items-center mb-4 pb-2 border-b border-neutral-700">
+                <h2 class="text-xl font-bold text-white">Settings</h2>
+                <button @click="$store.settingsMenu.toggle()" class="text-neutral-400 hover:text-white cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <main class="text-neutral-300">
+                <span class="text-lg text-neutral-500">General Settings:</span>
+                <div id="aceWebUI-specific"></div>
+                <span class="text-lg text-neutral-500">Ace Editor Settings:</span>
+                <div id="ace-specific" x-ref="ace_settings" class="mt-4"></div>
+            </main>
+
+            <footer class="mt-4 pt-4 border-t border-neutral-700 flex justify-between text-xs text-neutral-500">
+                <span class="capsule" x-text="'Version: ' + $store.meta.version"></span>
+                <span class="capsule">Ace Editor: <a href="https://ace.c9.io/" target="_blank" class="hover:text-white" x-text="ver"></a></span>
+                <span class="capsule">Made by: <a href="https://github.com/R-KL" target="_blank"
+                        class="hover:text-white">R-KL</a></span>
+            </footer>
+        </div>
+    </div>
+
+</body>
 
 </html>

@@ -7,6 +7,8 @@ config.yaml
 node_modules/
 custom*
 files/
+*.redb
+
 # Ignore IDE-specific files (optional but good practice)
 .vscode/
 .idea/

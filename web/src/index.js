@@ -3,6 +3,9 @@ import Alpine from "alpinejs";
 import lz from "lz-string";
 window.Alpine = Alpine;
 const iconCache = new Map();
+Alpine.store("meta", {
+  version: "0.0.10",
+})
 Alpine.store("ace", {
   editor: null,
   decOpacity: false,
@@ -35,6 +38,123 @@ Alpine.store("ft", {
     this.move = !this.move;
     //const ft = document.getElementById("file-tree-container");
   },
+});
+Alpine.store("settingsMenu", {
+  open: false,
+  urlmode: false,
+  MAP: { // Thanks ACE for the non-intutive naming convention used in ext-settings_menu.js....
+    // Once with _ are mapping exceptions that has to be handled manually.
+    theme: "_theme",
+    mode: "_mode",
+    key_binding: "KeyBinding",
+    font_size: "fontSize",
+    soft_wrap: "wrap",
+    cursor: "cursorStyle",
+    folding: "foldStyle",
+    soft_tabs: "_tabSize",
+    overscroll: "_scrollPastEnd",
+    atomic_soft_tabs: "navigateWithinSoftTabs",
+    enable_behaviours: "behavioursEnabled",
+    wrap_with_quotes: "wrapBehavioursEnabled",
+    auto_indent: "enableAutoIndent",
+    full_line_selection: "_selectionStyle",
+    highlight_active_line: "highlightActiveLine",
+    show_invisibles: "showInvisibles",
+    show_indent_guides: "displayIndentGuides",
+    highlight_indent_guides: "highlightIndentGuides",
+    persistent_hscrollbar: "hScrollBarAlwaysVisible",
+    persistent_vscrollbar: "vScrollBarAlwaysVisible",
+    animate_scrolling: "animatedScroll",
+    show_gutter: "showGutter",
+    show_line_numbers: "showLineNumbers",
+    relative_line_numbers: "relativeLineNumbers",
+    fixed_gutter_width: "fixedWidthGutter",
+    print_margin: "_printMarginColumn",
+    indented_soft_wrap: "indentedSoftWrap",
+    highlight_selected_word: "highlightSelectedWord",
+    fade_fold_widgets: "fadeFoldWidgets",
+    use_textarea_for_ime: "useTextareaForIME",
+    merge_undo_deltas: "_mergeUndoDeltas",
+    read_only: "readOnly",
+    copy_without_selection: "copyWithEmptySelection",
+    live_autocompletion: "enableLiveAutocompletion",
+    custom_scrollbar: "customScrollbar",
+    use_svg_gutterlines: "useSvgGutterIcons",
+    annotate_folded_lines: "showFoldedAnnotations",
+    keyboard_accessibility: "enableKeyboardAccessibility",
+    gutter_tooltip_follows_mouse: "tooltipFollowsMouse",
+  },
+  toDb() {
+    const editor = Alpine.store("ace").editor;
+    const Aceoptions = editor.getOptions();
+    let dbObject = {};
+    for (const [dbKey, aceKey] of Object.entries(this.MAP)) {
+      if (!aceKey.startsWith("_")) {
+        const value = Aceoptions[aceKey];
+        dbObject[dbKey] = value;
+      } else {
+        if (aceKey === "_printMarginColumn") {
+          if (Aceoptions.showPrintMargin) {
+            dbObject["print_margin"] = Aceoptions.printMarginColumn;
+          } else {
+            dbObject["print_margin"] = 0;
+          }
+        } else if (aceKey === "_theme") {
+          dbObject[dbKey] = Aceoptions.theme.replace("ace/theme/", "");
+        } else if (aceKey === "_mode") {
+          dbObject[dbKey] = Aceoptions.mode.replace("ace/mode/", "");
+        } else if (aceKey === "tabSize") {
+          dbObject[dbKey] = Aceoptions.useSoftTabs ? Aceoptions.tabSize : 0;
+        } else if (aceKey === "_scrollPastEnd") {
+          dbObject[dbKey] = Aceoptions.overscroll == 0 ? null : Aceoptions.overscroll == 0.5 ? "half" : "full"; // 0 for None, 0.5 for half, 1 for full screen, defaults to full, if other.
+        } else if (aceKey === "_selectionStyle") {
+          dbObject[dbKey] = Aceoptions.selectionStyle === "line" ? true : false; 
+        } else if (aceKey === "_mergeUndoDeltas") {
+          dbObject[dbKey] = Aceoptions.mergeUndoDeltas === "always" ? "always" : Aceoptions.mergeUndoDeltas === true ? "timed" : "never"; 
+        }
+    }
+
+    }
+    return dbObject;
+  },
+  toAce(dbObject) {
+    const editor = Alpine.store("ace").editor;
+    let aceOptions = {};
+    for (const [dbKey, aceKey] of Object.entries(this.MAP)) {
+      if (dbKey in dbObject) {
+        if (!aceKey.startsWith("_")) {
+          const value = dbObject[dbKey];
+          aceOptions[aceKey] = value;
+        } else {
+          if (aceKey === "_printMarginColumn") {
+            if (dbObject["print_margin"] > 0) {
+              aceOptions["showPrintMargin"] = true;
+              aceOptions["printMarginColumn"] = dbObject["print_margin"];
+            } else {
+              aceOptions["showPrintMargin"] = false;
+            }
+          } else if (aceKey === "_theme" && !this.urlmode) {
+            aceOptions["theme"] = "ace/theme/" + dbObject[dbKey];
+          } else if (aceKey === "_mode" && !this.urlmode) {
+            aceOptions["mode"] = "ace/mode/" + dbObject[dbKey];
+          } else if (aceKey === "tabSize") {
+            aceOptions["tabSize"] = dbObject[dbKey] > 0 ? dbObject[dbKey] : 4; // Default to 4 
+            aceOptions["useSoftTabs"] = dbObject[dbKey] > 0 ? true : false;
+          } else if (aceKey === "_scrollPastEnd") {
+            aceOptions["scrollPastEnd"] = dbObject[dbKey] === null ? 0 : dbObject[dbKey] === "half" ? 0.5 : 1;
+          } else if (aceKey === "_selectionStyle") {
+            aceOptions["selectionStyle"] = dbObject[dbKey] ? "line" : "text";
+          } else if (aceKey === "_mergeUndoDeltas") {
+            aceOptions["mergeUndoDeltas"] = dbObject[dbKey] === "always" ? "always" : dbObject[dbKey] === "timed" ? true : false;
+          }
+        }
+      }
+    }
+    return aceOptions;
+  },
+  toggle() {
+    this.open = !this.open;
+  }
 });
 Alpine.store("opfs", {
   currentDir: "/",
@@ -340,7 +460,7 @@ Alpine.store("backend", {
     if (!this.ftjs) {
       await this.init();
     }
-    const treeJson = await fetch("/fs/get_file_tree", {
+    const treeJson = await fetch("/api/fs/get_file_tree", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -452,7 +572,7 @@ Alpine.store("backend", {
         bubbles: true,
       }),
     );
-    let content = await fetch("/fs/read", {
+    let content = await fetch("/api/fs/read", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -465,7 +585,7 @@ Alpine.store("backend", {
       ace.require("ace/ext/modelist").getModeForPath(path).mode,
     );
     Alpine.store("ace").openMode = "backend";
-    this.currentDir = path.substring(0, path.lastIndexOf("/"));
+    this.currentDir = path.substring(0, path.lastIndexOf("/") || "/");
     this.path = path;
   },
 });
@@ -520,16 +640,38 @@ Alpine.data("AceApp", () => ({
         },
         ":"(lineNum) {
           if (!isNaN(lineNum)) {
-            this.editor.scrollToLine(lineNum - 1, true, true, () => {});
+            this.editor.scrollToLine(lineNum - 1, true, true, () => { });
             this.editor.gotoLine(lineNum, 0, true);
           }
         },
       });
     };
   },
+  async loadSettings() {
+    try {
+      const res = await fetch("/api/editor/read", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        const settings = await res.json();
+        const aceOptions = Alpine.store("settingsMenu").toAce(settings);
+        Alpine.store("ace").editor.setOptions(aceOptions);
+      }
+    } catch (e) {
+      console.warn("Response for editor settings is not ok, using local Storage. Error:", e);
+      const localSettings = localStorage.getItem("editorSettings");
+      if (localSettings) {
+        const settings = JSON.parse(localSettings);
+        const aceOptions = Alpine.store("settingsMenu").toAce(settings);
+        Alpine.store("ace").editor.setOptions(aceOptions);
+      } else {
+        console.warn("No local settings found either, using defaults.");
+      }
+    }
+  },
   initSettingsMenu() {
     const editorInstance = this.editor;
-
     ace.config.loadModule("ace/ext/settings_menu", (module) => {
       module.init(editorInstance);
       editorInstance.commands.addCommand({
@@ -541,6 +683,7 @@ Alpine.data("AceApp", () => ({
         readOnly: true,
       });
     });
+    this.loadSettings();
   },
   async openFile() {
     const reader = new FileReader();
@@ -585,9 +728,9 @@ Alpine.data("AceApp", () => ({
     fileInput.click();
   },
   prompts() {
-    prompt = ace.require("ace/ext/prompt");
-    console.log(prompt);
-    prompt.modes(this.editor);
+    let Aceprompt = ace.require("ace/ext/prompt");
+    console.log(Aceprompt);
+    Aceprompt.modes(this.editor);
   },
   initStatusBar() {
     const StatusBarObject = ace.require("ace/ext/statusbar").StatusBar;
@@ -595,7 +738,7 @@ Alpine.data("AceApp", () => ({
   },
 
   openSettingsMenu() {
-    this.editor.showSettingsMenu();
+    Alpine.store("settingsMenu").open = !Alpine.store("settingsMenu").open;
   },
   async save(filename = null) {
     if (this.$store.ace.isUrl) {
@@ -668,7 +811,7 @@ Alpine.data("AceApp", () => ({
     }
     if (this.$store.ace.openMode === "backend") {
       try {
-        const response = await fetch("/fs/write", {
+        const response = await fetch("/api/fs/write", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -718,6 +861,7 @@ Alpine.data("AceApp", () => ({
       console.log({ decoded, encodedcode, code, mode, theme });
       if (decoded !== null) {
         this.editor.setValue(code, -1);
+        Alpine.store("settingsMenu").urlmode = true;
         this.editor.session.setMode(`ace/mode/${mode}`);
         this.editor.setTheme(`ace/theme/${theme}`);
         if (render === "true" && confirm(
@@ -728,7 +872,7 @@ Alpine.data("AceApp", () => ({
         )) {
           const { createPreview, renderPreviewMarkdown } =
             await import("./preview-engine.js");
-          createPreview("Markdown Preview",false);
+          createPreview("Markdown Preview", false);
           renderPreviewMarkdown(code);
         }
         this.loading = false;
@@ -746,7 +890,7 @@ Alpine.data("AceApp", () => ({
     }
     finally {
       this.loading = false;
-      }
+    }
   },
   markDownMode() {
     // this includes both markdown and html since hey they both can use the marked preview
@@ -762,35 +906,81 @@ Alpine.data("AceApp", () => ({
     }
   },
 }));
+Alpine.data("settingsMenu", () => ({
+  ver: "0.0.0",
+  async init() {
+    try {
+      const OptionPanel = await new Promise((resolve) => {
+        ace.config.loadModule("ace/ext/options", (module) => {
+          resolve(module.OptionPanel);
+        });
+      });
+      const panel = new OptionPanel(Alpine.store("ace").editor);
+      panel.render();
+      this.ver = panel.container.querySelector("#controls").lastChild.lastChild.innerHTML.replace("version", "");
+      console.log("Loaded Ace OptionPanel version:", this.ver);
+      panel.container.querySelector("#controls").lastChild.remove();
+      this.$refs.ace_settings.appendChild(panel.container);
+      this.$watch("$store.settingsMenu.open", (newVal) => {
+        if (!newVal) {
+          this.saveSettings();
+        }
+      });
+      
+    } catch (e) {
+      console.warn("Failed to load Ace OptionPanel module:", e);
+      // Fallback if the file literally doesn't exist
+      Alpine.store("ace").editor.showSettingsMenu(); 
+    }
+  },
+  open() {
+    this.isOpen = true;
+  },
+  async saveSettings() {
+    const editor = Alpine.store("ace").editor;
+    const options = editor.getOptions();
+    const dbObject = Alpine.store("settingsMenu").toDb(options);
+    try {
+      fetch("/api/editor/write", {
+        method: "PUT",
+        body: JSON.stringify(dbObject),
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      console.warn("Failed to save settings to backend, saving to  localStorage. Error:", e);
+      localStorage.setItem("editorSettings", JSON.stringify(dbObject));
+    }
+  },
+}));
 Alpine.data("statusbar", () => ({
   currentIcon: "",
   languageColors: {},
   message: '',
-  oldMsg: '', 
+  oldMsg: '',
   timer: null,
   strtTime: 0,
   timeout: 0,
   queue: [],
   timeoutQueue: [],
   flash(msg, timeout = 3000) {
-      if (this.timer) {
-          this.queue.push({ msg, timeout });
-          return;
-      }
-      this.oldMsg = this.message; 
+    if (this.timer) {
+      this.queue.push({ msg, timeout });
+      return;
+    }
+    this.oldMsg = this.message;
+    this.message = msg;
+    if (timeout === 0) {
       this.message = msg;
-      if (timeout === 0) {
-          this.message = msg;
-          return;
+      return;
+    }
+    this.timer = setTimeout(() => {
+      this.message = this.oldMsg;
+      this.timer = null;
+      if (this.queue.length > 0) {
+        const next = this.queue.shift();
+        this.flash(next.msg, next.timeout);
       }
-      this.timer = setTimeout(() => {
-          this.message = this.oldMsg;
-          this.timer = null;
-          if (this.queue.length > 0) {
-              const next = this.queue.shift();
-              this.flash(next.msg, next.timeout);
-          }
-      }, timeout);
+    }, timeout);
   },
   init() {
     // Initialize colors

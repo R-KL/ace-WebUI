@@ -10,7 +10,7 @@ const basePath = process.env.VITE_BASE_PATH || '/'
 export default defineConfig({
   server: {
     proxy: {
-      '/fs': 'http://localhost:8080',
+      '/api': 'http://localhost:8080',
     }
   },
   plugins: [

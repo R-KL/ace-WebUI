@@ -6,3 +6,4 @@ editor:
    mode: "rust"
 storage:
    project_folder: "files"
+   db_path: "./app_db.redb"
