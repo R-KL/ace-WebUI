@@ -1,11 +1,15 @@
 import "./style.css";
+import "@fontsource/jetbrains-mono";
 import Alpine from "alpinejs";
 import lz from "lz-string";
 window.Alpine = Alpine;
 const iconCache = new Map();
 Alpine.store("meta", {
   version: "0.0.10",
-})
+});
+Alpine.store("settings", {
+  host: "", // For backend API calls, if empty it will use relative path
+});
 Alpine.store("ace", {
   editor: null,
   decOpacity: false,
@@ -34,7 +38,7 @@ Alpine.store("ft", {
     if (this.ftjs) return;
     this.ftjs = await import("./filetree.js");
   },
-  open() {
+  toggle() {
     this.move = !this.move;
     //const ft = document.getElementById("file-tree-container");
   },
@@ -42,7 +46,8 @@ Alpine.store("ft", {
 Alpine.store("settingsMenu", {
   open: false,
   urlmode: false,
-  MAP: { // Thanks ACE for the non-intutive naming convention used in ext-settings_menu.js....
+  MAP: {
+    // Thanks ACE for the non-intutive naming convention used in ext-settings_menu.js....
     // Once with _ are mapping exceptions that has to be handled manually.
     theme: "_theme",
     mode: "_mode",
@@ -106,14 +111,23 @@ Alpine.store("settingsMenu", {
         } else if (aceKey === "tabSize") {
           dbObject[dbKey] = Aceoptions.useSoftTabs ? Aceoptions.tabSize : 0;
         } else if (aceKey === "_scrollPastEnd") {
-          dbObject[dbKey] = Aceoptions.overscroll == 0 ? null : Aceoptions.overscroll == 0.5 ? "half" : "full"; // 0 for None, 0.5 for half, 1 for full screen, defaults to full, if other.
+          dbObject[dbKey] =
+            Aceoptions.overscroll == 0
+              ? null
+              : Aceoptions.overscroll == 0.5
+                ? "half"
+                : "full"; // 0 for None, 0.5 for half, 1 for full screen, defaults to full, if other.
         } else if (aceKey === "_selectionStyle") {
-          dbObject[dbKey] = Aceoptions.selectionStyle === "line" ? true : false; 
+          dbObject[dbKey] = Aceoptions.selectionStyle === "line" ? true : false;
         } else if (aceKey === "_mergeUndoDeltas") {
-          dbObject[dbKey] = Aceoptions.mergeUndoDeltas === "always" ? "always" : Aceoptions.mergeUndoDeltas === true ? "timed" : "never"; 
+          dbObject[dbKey] =
+            Aceoptions.mergeUndoDeltas === "always"
+              ? "always"
+              : Aceoptions.mergeUndoDeltas === true
+                ? "timed"
+                : "never";
         }
-    }
-
+      }
     }
     return dbObject;
   },
@@ -138,14 +152,24 @@ Alpine.store("settingsMenu", {
           } else if (aceKey === "_mode" && !this.urlmode) {
             aceOptions["mode"] = "ace/mode/" + dbObject[dbKey];
           } else if (aceKey === "tabSize") {
-            aceOptions["tabSize"] = dbObject[dbKey] > 0 ? dbObject[dbKey] : 4; // Default to 4 
+            aceOptions["tabSize"] = dbObject[dbKey] > 0 ? dbObject[dbKey] : 4; // Default to 4
             aceOptions["useSoftTabs"] = dbObject[dbKey] > 0 ? true : false;
           } else if (aceKey === "_scrollPastEnd") {
-            aceOptions["scrollPastEnd"] = dbObject[dbKey] === null ? 0 : dbObject[dbKey] === "half" ? 0.5 : 1;
+            aceOptions["scrollPastEnd"] =
+              dbObject[dbKey] === null
+                ? 0
+                : dbObject[dbKey] === "half"
+                  ? 0.5
+                  : 1;
           } else if (aceKey === "_selectionStyle") {
             aceOptions["selectionStyle"] = dbObject[dbKey] ? "line" : "text";
           } else if (aceKey === "_mergeUndoDeltas") {
-            aceOptions["mergeUndoDeltas"] = dbObject[dbKey] === "always" ? "always" : dbObject[dbKey] === "timed" ? true : false;
+            aceOptions["mergeUndoDeltas"] =
+              dbObject[dbKey] === "always"
+                ? "always"
+                : dbObject[dbKey] === "timed"
+                  ? true
+                  : false;
           }
         }
       }
@@ -154,7 +178,7 @@ Alpine.store("settingsMenu", {
   },
   toggle() {
     this.open = !this.open;
-  }
+  },
 });
 Alpine.store("opfs", {
   currentDir: "/",
@@ -390,6 +414,7 @@ Alpine.store("opfs", {
         if (this.getPath(path)) {
           if (this.opfs.exists(path) || this.opfs.dirExists(path)) {
             const newValue = prompt("Enter new File Name");
+            if (newValue == null) return;
             let last = path.split("/");
             last.pop();
             last = last.join("/");
@@ -460,13 +485,16 @@ Alpine.store("backend", {
     if (!this.ftjs) {
       await this.init();
     }
-    const treeJson = await fetch("/api/fs/get_file_tree", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const treeJson = await fetch(
+      Alpine.store("settings").host + "/api/fs/get_file_tree",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path: "/" }),
       },
-      body: JSON.stringify({ path: "/" }),
-    }).then((res) => res.json());
+    ).then((res) => res.json());
     console.log("Generated OPFS file tree JSON:", treeJson);
     console.log("Container element:", container);
     if (!container) container = document.getElementById("file-tree");
@@ -476,43 +504,44 @@ Alpine.store("backend", {
     this.contextMenuObject = {
       "New File": async (path) => {
         alert("I will implement this later");
-        return;
-        if (this.getPath(path)) {
-          const fileName = prompt("Enter new File Name", "NewFile.txt");
-          if (fileName) {
-            this.touch(fileName, path).then(async () => {
-              this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
-            });
-          }
-        }
+        // if (this.getPath(path)) {
+        //   const fileName = prompt("Enter new File Name", "NewFile.txt");
+        //   if (fileName) {
+        //     this.touch(fileName, path).then(async () => {
+        //       this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+        //     });
+        //   }
+        // }
       },
       "New Folder": async (path, _kind) => {
         alert("I will implement this later");
-        return;
-        if (this.getPath(this.currentDir)) {
-          alert("_will implement later");
-          return;
-          const folderName = prompt("Enter new Folder Name", "NewFolder");
-          if (folderName) {
-            this.opfs.mkdir(path + "/" + folderName).then(async () => {
-              this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
-            });
-          }
-        }
+        // if (this.getPath(this.currentDir)) {
+        //   alert("_will implement later");
+        //   return;
+        //   const folderName = prompt("Enter new Folder Name", "NewFolder");
+        //   if (folderName) {
+        //     this.opfs.mkdir(path + "/" + folderName).then(async () => {
+        //       this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+        //     });
+        //   }
+        // }
       },
-      /*  "Cut": (path, kind) => {
-                  if (kind === "directory") return; // Later add ability to cut entire directories
-                  if (this.getPath(path)) {
-                      if (this.opfs.exists(path)) {
-                          const editor = Alpine.raw(Alpine.store('ace').editor);
-                          const value = editor.getValue();
-                          console.log("Cutting File:", value);
-                          navigator.clipboard.writeText(value).then(() => {
-                              console.log("File content copied to clipboard ( for now its same has copying )");
-                          });
-                      }
-                  }
-              }, */
+      Cut: (path, kind) => {
+        alert(
+          "Cuting File/folder ( this has not been implemented yet, will do it later",
+        );
+        // if (kind === "directory") return; // Later add ability to cut entire directories
+        // if (this.getPath(path)) {
+        //     if (this.opfs.exists(path)) {
+        //         const editor = Alpine.raw(Alpine.store('ace').editor);
+        //         const value = editor.getValue();
+        //         console.log("Cutting File:", value);
+        //         navigator.clipboard.writeText(value).then(() => {
+        //             console.log("File content copied to clipboard ( for now its same has copying )");
+        //         });
+        //     }
+        // }
+      },
       "Copy ": () => {
         alert(
           "Copying File ( this has not been implemented yet, will do it later",
@@ -540,22 +569,21 @@ Alpine.store("backend", {
       },
       Delete: async (path, _kind) => {
         alert("I will implement this later");
-        return;
-        const part = path.split("/");
-        const name = part.pop();
-        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-        if (this.getPath(path)) {
-          if (this.opfs.dirExists(path)) {
-            return;
-            this.opfs.deleteDir(path).then(async () => {
-              this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
-            });
-          } else if (this.opfs.exists(path)) {
-            this.opfs.deleteFile(path).then(async () => {
-              this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
-            });
-          }
-        }
+        // const part = path.split("/");
+        // const name = part.pop();
+        // if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+        // if (this.getPath(path)) {
+        //   if (this.opfs.dirExists(path)) {
+        //     return;
+        //     this.opfs.deleteDir(path).then(async () => {
+        //       this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+        //     });
+        //   } else if (this.opfs.exists(path)) {
+        //     this.opfs.deleteFile(path).then(async () => {
+        //       this.ftjs.update(this.makeItRoot(await this.getTreeJson()));
+        //     });
+        //   }
+        // }
       },
     };
     this.ftjs.contextMenu(container, this.contextMenuObject);
@@ -572,7 +600,7 @@ Alpine.store("backend", {
         bubbles: true,
       }),
     );
-    let content = await fetch("/api/fs/read", {
+    let content = await fetch(Alpine.store("settings").host + "/api/fs/read", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -589,6 +617,12 @@ Alpine.store("backend", {
     this.path = path;
   },
 });
+Alpine.data("filetree", () => ({
+  isOpen: false,
+  open() {
+    this.isOpen = true;
+  },
+}));
 Alpine.data("AceApp", () => ({
   menuCloseButton: false,
   loading: true,
@@ -640,7 +674,7 @@ Alpine.data("AceApp", () => ({
         },
         ":"(lineNum) {
           if (!isNaN(lineNum)) {
-            this.editor.scrollToLine(lineNum - 1, true, true, () => { });
+            this.editor.scrollToLine(lineNum - 1, true, true, () => {});
             this.editor.gotoLine(lineNum, 0, true);
           }
         },
@@ -649,17 +683,23 @@ Alpine.data("AceApp", () => ({
   },
   async loadSettings() {
     try {
-      const res = await fetch("/api/editor/read", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      });
+      const res = await fetch(
+        Alpine.store("settings").host + "/api/editor/read",
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
       if (res.ok) {
         const settings = await res.json();
         const aceOptions = Alpine.store("settingsMenu").toAce(settings);
         Alpine.store("ace").editor.setOptions(aceOptions);
       }
     } catch (e) {
-      console.warn("Response for editor settings is not ok, using local Storage. Error:", e);
+      console.warn(
+        "Response for editor settings is not ok, using local Storage. Error:",
+        e,
+      );
       const localSettings = localStorage.getItem("editorSettings");
       if (localSettings) {
         const settings = JSON.parse(localSettings);
@@ -811,16 +851,19 @@ Alpine.data("AceApp", () => ({
     }
     if (this.$store.ace.openMode === "backend") {
       try {
-        const response = await fetch("/api/fs/write", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          Alpine.store("settings").host + "/api/fs/write",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              path: Alpine.store("backend").path,
+              content: this.editor.getValue(),
+            }),
           },
-          body: JSON.stringify({
-            path: Alpine.store("backend").path,
-            content: this.editor.getValue(),
-          }),
-        });
+        );
       } catch (error) {
         console.error("Error saving file to backend:", error);
         this.$dispatch("update-msg", {
@@ -864,12 +907,15 @@ Alpine.data("AceApp", () => ({
         Alpine.store("settingsMenu").urlmode = true;
         this.editor.session.setMode(`ace/mode/${mode}`);
         this.editor.setTheme(`ace/theme/${theme}`);
-        if (render === "true" && confirm(
-          "Render on loading enabled by the url creator. \r\n" +
-          "Render the markdown  now?\r\n" +
-          "\r\n" +
-          "Markdown rendering is done safely."
-        )) {
+        if (
+          render === "true" &&
+          confirm(
+            "Render on loading enabled by the url creator. \r\n" +
+              "Render the markdown  now?\r\n" +
+              "\r\n" +
+              "Markdown rendering is done safely.",
+          )
+        ) {
           const { createPreview, renderPreviewMarkdown } =
             await import("./preview-engine.js");
           createPreview("Markdown Preview", false);
@@ -887,8 +933,7 @@ Alpine.data("AceApp", () => ({
       }
     } catch (e) {
       console.warn("Failed to decompress content from URL:", e);
-    }
-    finally {
+    } finally {
       this.loading = false;
     }
   },
@@ -908,6 +953,7 @@ Alpine.data("AceApp", () => ({
 }));
 Alpine.data("settingsMenu", () => ({
   ver: "0.0.0",
+  panel: null,
   async init() {
     try {
       const OptionPanel = await new Promise((resolve) => {
@@ -915,25 +961,28 @@ Alpine.data("settingsMenu", () => ({
           resolve(module.OptionPanel);
         });
       });
-      const panel = new OptionPanel(Alpine.store("ace").editor);
-      panel.render();
-      this.ver = panel.container.querySelector("#controls").lastChild.lastChild.innerHTML.replace("version", "");
-      console.log("Loaded Ace OptionPanel version:", this.ver);
-      panel.container.querySelector("#controls").lastChild.remove();
-      this.$refs.ace_settings.appendChild(panel.container);
-      this.$watch("$store.settingsMenu.open", (newVal) => {
-        if (!newVal) {
+      this.panel = new OptionPanel(Alpine.store("ace").editor);
+      this.$refs.ace_settings.appendChild(this.panel.container);
+      this.$watch("$store.settingsMenu.open", (val) => {
+        this.open();
+        if (!val) {
           this.saveSettings();
         }
       });
-      
     } catch (e) {
       console.warn("Failed to load Ace OptionPanel module:", e);
       // Fallback if the file literally doesn't exist
-      Alpine.store("ace").editor.showSettingsMenu(); 
+      Alpine.store("ace").editor.showSettingsMenu();
     }
   },
   open() {
+    if (this.isOpen == true) this.isOpen = false;
+    this.panel.render();
+    this.ver = this.panel.container
+      .querySelector("#controls")
+      .lastChild.lastChild.innerHTML.replace("version", "");
+    //  console.log("Loaded Ace OptionPanel version:", this.ver);
+    this.panel.container.querySelector("#controls").lastChild.remove();
     this.isOpen = true;
   },
   async saveSettings() {
@@ -941,13 +990,16 @@ Alpine.data("settingsMenu", () => ({
     const options = editor.getOptions();
     const dbObject = Alpine.store("settingsMenu").toDb(options);
     try {
-      fetch("/api/editor/write", {
+      fetch(Alpine.store("settings").host + "/api/editor/write", {
         method: "PUT",
         body: JSON.stringify(dbObject),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
     } catch (e) {
-      console.warn("Failed to save settings to backend, saving to  localStorage. Error:", e);
+      console.warn(
+        "Failed to save settings to backend, saving to  localStorage. Error:",
+        e,
+      );
       localStorage.setItem("editorSettings", JSON.stringify(dbObject));
     }
   },
@@ -955,8 +1007,8 @@ Alpine.data("settingsMenu", () => ({
 Alpine.data("statusbar", () => ({
   currentIcon: "",
   languageColors: {},
-  message: '',
-  oldMsg: '',
+  message: "",
+  oldMsg: "",
   timer: null,
   strtTime: 0,
   timeout: 0,
@@ -1084,6 +1136,7 @@ Alpine.data("terminal", () => ({
     this.initialized = true;
     const container = this.$refs.terminal;
     const term = new Terminal({
+      fontFamily: "'JetBrains Mono', monospace",
       cursorBlink: true,
       scrollback: 1000,
       theme: {

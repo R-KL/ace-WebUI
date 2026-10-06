@@ -1,6 +1,12 @@
 use axum::{
-    Router, extract::{Json, State}, http::StatusCode, response::{self, IntoResponse}, routing::{get, post, put}
+    extract::{Json, State},
+    http::{header, uri, StatusCode},
+    response::{self, IntoResponse},
+    routing::{get, post, put},
+    Router,
 };
+
+use mime_guess::from_path;
 
 use log::{debug, info, warn, LevelFilter};
 
@@ -9,6 +15,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use tokio::signal;
+#[allow(unused_imports)]
 use tower_http::services::ServeDir;
 
 mod definitions;
@@ -18,9 +25,9 @@ struct AppState {
     config: Arc<definitions::Config>,
     fs: Arc<definitions::EditorFs>,
 }
-//////////////////////
+///////////////////////
 // Helper Functions //
-//////////////////////
+/////////////////////
 async fn shutdown() {
     signal::ctrl_c()
         .await
@@ -33,9 +40,12 @@ async fn get_file_tree(
 ) -> Result<response::Json<definitions::FileHandle>, String> {
     if let Some(path) = req.path {
         let root_path = match app_state.fs.vfs.root().join(path) {
-            Ok(path) => path, 
+            Ok(path) => path,
             Err(e) => {
-                warn!("Could not read the root directory due to {}, using default root",e);
+                warn!(
+                    "Could not read the root directory due to {}, using default root",
+                    e
+                );
                 app_state.fs.vfs.root()
             }
         };
@@ -53,24 +63,24 @@ async fn get_file_tree(
         Err("Error: path is required for get_file_tree operation".to_string())
     }
 }
-  ///////////////////////////
- //     Axum Handlers     //
+///////////////////////////
+//     Axum Handlers     //
 ///////////////////////////
 async fn fs_write_handler(
     State(app_state): State<Arc<AppState>>,
     Json(req): Json<definitions::FileRequest>,
 ) {
     if let Some(content) = req.content {
-        let capacity =  content.len();
+        let capacity = content.len();
         let path = req.path.clone();
         match app_state.fs.vfs.write(req.path, content).await {
             Ok(success) => {
                 if success {
-                    info!("Wrote {} bytes to {}",capacity, &path);
+                    info!("Wrote {} bytes to {}", capacity, &path);
                 } else {
                     warn!("Couldn't write to {}", &path);
                 }
-            },
+            }
             Err(e) => {
                 warn!("Could not write to {} due to an error: {}", path, e);
             }
@@ -79,18 +89,49 @@ async fn fs_write_handler(
         warn!("Error: content is required for write operation");
     }
 }
-async fn fs_read_handler(State(app_state): State<Arc<AppState>>,Json(req): Json<definitions::FileRequest>) -> impl IntoResponse {
+async fn fs_read_handler(
+    State(app_state): State<Arc<AppState>>,
+    Json(req): Json<definitions::FileRequest>,
+) -> impl IntoResponse {
     match app_state.fs.vfs.read(req.path.clone()).await {
         Ok(content) => {
             return (StatusCode::OK, content);
-        },
+        }
         Err(e) => {
-            warn!("{}",e);
+            warn!("{}", e);
             return (StatusCode::NOT_FOUND, "Error 404".to_string());
         }
-    } 
+    }
 }
+// async fn dist_handler(uri: uri::Uri) -> impl IntoResponse {
+//     if uri.path() == "/" {
+//         return response::Redirect::permanent("/index.html").into_response();
+//     }
+//     let Some(path) = uri.path().strip_prefix("/") else {
+//         return (StatusCode::NOT_FOUND, "Error 404".to_string()).into_response();
+//     };
 
+//     let content = Assets::get_asset(path);
+//     if content.is_empty() {
+//         (
+//             [(
+//                 header::CONTENT_TYPE,
+//                 from_path(path).first_or_octet_stream().as_ref(),
+//             )],
+//             "Error 404".as_bytes().to_vec(),
+//         )
+//             .into_response()
+//     } else {
+//         (
+//             [(
+//                 header::CONTENT_TYPE,
+//                 from_path(path).first_or_octet_stream().as_ref(),
+//             )],
+//             content,
+//         )
+//             .into_response()
+//     }
+// }
 /////////////////////////////////////////////////////////////////////////////
 // Settings.yaml and editor-state.json(for editor) parsing code begin here //
 /////////////////////////////////////////////////////////////////////////////
@@ -109,11 +150,11 @@ async fn write_editor_state(State(app_state): State<Arc<AppState>>, Json(req): J
     match app_state.fs.db.write(req) {
         Ok(_) => info!("Wrote user config to database"),
         Err(e) => {
-            warn!("Could not write to database due to error: {}",e);
+            warn!("Could not write to database due to error: {}", e);
         }
     }
 }
-async fn read_editor_state(State(app_state):State<Arc<AppState>>) -> Json<EditorConfig> {
+async fn read_editor_state(State(app_state): State<Arc<AppState>>) -> Json<EditorConfig> {
     let Some(editor_state) = app_state.fs.db.read(app_state.config.editor.clone()) else {
         return Json(EditorConfig::default());
     };
@@ -124,18 +165,18 @@ async fn read_editor_state(State(app_state):State<Arc<AppState>>) -> Json<Editor
 ////////////////////////////////////////////
 async fn server(config: Config) {
     let app_state = Arc::new(AppState {
-        fs: Arc::new(
-            definitions::EditorFs { vfs: EditorVfs::new(&config.storage.project_folder.as_deref().unwrap()) , db: ReDb::new() }
-        ),
+        fs: Arc::new(definitions::EditorFs {
+            vfs: EditorVfs::new(&config.storage.project_folder.as_deref().unwrap()),
+            db: ReDb::new(),
+        }),
         config: Arc::new(config),
     });
     let editor: Router<Arc<AppState>> = Router::<Arc<AppState>>::new()
-        .route("/read",
-            get(read_editor_state))
-        .route("/write",put(write_editor_state));
+        .route("/read", get(read_editor_state))
+        .route("/write", put(write_editor_state));
     let file_system: Router<Arc<AppState>> = Router::<Arc<AppState>>::new()
-        .route( "/read", post(fs_read_handler))
-        .route( "/write", post(fs_write_handler))
+        .route("/read", post(fs_read_handler))
+        .route("/write", post(fs_write_handler))
         .route(
             "/get_root",
             post(|State(app_state): State<Arc<AppState>>| async move {
@@ -148,8 +189,9 @@ async fn server(config: Config) {
         .nest("/editor", editor);
     let app: Router = Router::<Arc<AppState>>::new()
         .route("/hello", get(|| async { "Hi, This is AceWebUI" }))
-        .nest_service("/", ServeDir::new("../web/dist"))
         .nest("/api", api)
+        .nest_service("/", ServeDir::new("../web/dist"))
+       // .fallback(dist_handler)
         .with_state(app_state.clone());
     let lister = tokio::net::TcpListener::bind(app_state.as_ref().config.server.get_addr())
         .await

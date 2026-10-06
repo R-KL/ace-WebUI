@@ -93,7 +93,7 @@
                             </svg>
                         </button>
                         <button
-                            @click="$store.bottomBar.move = !$store.bottomBar.move; 
+                            @click="$store.bottomBar.move = !$store.bottomBar.move;
                             $dispatch('update-msg', { msg: $store.bottomBar.move ? 'Terminal opened' : 'Terminal closed' })"
                             class="side-button group">
                             <svg class="group-hover:animate-pulse">
@@ -103,7 +103,7 @@
                         <template x-if="$store.marked.previewButton">
                             <button x-data="markedPreview()"
                                 @trigger-render.window="fetchPreviewHtml($event.detail.code)"
-                                @click="fetchPreviewHtml(); 
+                                @click="fetchPreviewHtml();
                                 $dispatch('update-msg', { msg: $store.marked.ack ? 'Opening preview in new window' : 'Preview cancelled' })" class="side-button group">
                                 <svg class="group-hover:animate-pulse">
                                     <use href="sprite.svg#icon-preview"></use>
@@ -131,13 +131,13 @@
                                     </svg>
                                 </button>
                                 <button class="side-button mt-2 group"
-                                    @click="$store.ft.open();$nextTick(() => $store.backend.drawFileTree());">
+                                    @click="$store.ft.toggle();$nextTick(() => $store.backend.drawFileTree());">
                                     <svg class="h-6 w-6 text-current group-hover:animate-pulse">
                                         <use href="sprite.svg#icon-server"></use>
                                     </svg>
                                 </button>
                                 <button class="side-button group"
-                                    @click="$store.ft.open();$nextTick(() => $store.opfs.drawOPFSFileTree());">
+                                    @click="$store.ft.toggle();$nextTick(() => $store.opfs.drawOPFSFileTree());">
                                     <svg class="h-6 w-6 text-current group-hover:animate-pulse">
                                         <use href="sprite.svg#icon-file-tree"></use>
                                     </svg>
@@ -165,7 +165,7 @@
                             <hr class="border border-neutral-500 dark:border-neutral-700">
                             <div id="btn-container" class="flex justify-center flex-col">
                                 <div class=" flex justify-center items-center">
-                                    <button @click="$store.ace.isUrl = true; save(); 
+                                    <button @click="$store.ace.isUrl = true; save();
                                       $nextTick(() => $dispatch('update-msg', { msg: 'File saved as URL' }))"
                                         class="bg-blue-500 text-white px-4 py-2 rounded-xl w-fit">
                                         Save as URL
@@ -299,8 +299,12 @@
                     </div>
                     <div id="file-tree-container" x-show="$store.ft.move"
                         class="flex flex-col h-full m-0 z-10 select-none fixed top-0 bottom-0 left-0 w-[60vw] sm:w-[14vw] border-r border-neutral-800 bg-neutral-900 text-neutral-300 p-2 overflow-y-auto transition-all duration-300">
-                        <div id="file-tree-closeBtn" class="flex w-full"><button @click="$store.ft.open()"
-                                class="ml-auto cursor-pointer">🗙</button></div>
+                        <div id="file-tree-closeBtn" class="flex w-full"><button @click="$store.ft.toggle()"
+                                class="ml-auto cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x preview-icon">
+                                        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                                    </svg>
+                                </button></div>
                         <div id="file-tree-mkdir" x-data="{
                             askMkdir() {
                                 const folderName = prompt('Enter new Folder Name ( use / for absolute path)\n Default to last Double Clicked Directory', 'NewFolder');
@@ -322,8 +326,21 @@
                             }
                         }" class="flex w-full my-1">
                             <div class="ml-auto flex">
-                                <button @click="askTouch()" class="ml-2 cursor-pointer">🖹</button>
-                                <button @click="askMkdir()" class="ml-2 cursor-pointer">🗀</button>
+                                <button @click="askTouch()" class="ml-2 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus-corner preview-icon">
+                                        <path d="M11.35 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v5.35"/>
+                                        <path d="M14 2v5a1 1 0 0 0 1 1h5"/>
+                                        <path d="M14 19h6"/>
+                                        <path d="M17 16v6"/>
+                                    </svg>
+                                </button>
+                                <button @click="askMkdir()" class="ml-2 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-plus preview-icon">
+                                        <path d="M12 10v6"/>
+                                        <path d="M9 13h6"/>
+                                        <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                         <div id="file-tree" class="h-max w-full"></div>

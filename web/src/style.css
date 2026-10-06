@@ -1,85 +1,118 @@
 @import "tailwindcss";
 @theme {
-  --color-github: #0d1117;
+    --color-github: #0d1117;
 }
 
+body {
+    font-family: "JetBrains Mono", monospace;
+}
 /* ====================
    Side Button Styles
    ==================== */
 .side-button {
-  @apply bg-[#1e1e1e] hover:bg-neutral-400 shadow-lg rounded-3xl p-2 m-1 transition-colors;
+    @apply bg-[#1e1e1e] hover:bg-neutral-400 shadow-lg rounded-3xl p-2 m-1 transition-colors;
 }
 .side-button svg {
-  @apply text-neutral-400 w-4 h-4 lg:w-7 lg:h-7 group-hover:text-[#1e1e1e] transition-colors;
+    @apply text-neutral-400 w-4 h-4 lg:w-7 lg:h-7 group-hover:text-[#1e1e1e] transition-colors;
 }
 #close-menu-button {
-  @apply hover:bg-[#444] bg-[#303030] shadow-lg rounded-xl p-2 m-1 w-full transition-colors;
+    @apply hover:bg-[#444] bg-[#303030] shadow-lg rounded-xl p-2 m-1 w-full transition-colors;
 }
 .resizable {
-  @apply resize overflow-auto;
+    @apply resize overflow-auto;
 }
 
 /* ====================
    Modal Base Styles
    ==================== */
 .modal {
-  @apply bg-github/80 fixed inset-0 z-30 backdrop-opacity-90 flex items-end justify-center p-4 pb-8 sm:items-center lg:p-8;
+    @apply bg-github/80 fixed inset-0 z-30 backdrop-opacity-90 flex items-end justify-center p-4 pb-8 sm:items-center lg:p-8;
 }
 .modal button {
-  @apply hover:brightness-125 cursor-pointer;
+    @apply hover:brightness-125 cursor-pointer;
 }
 
 /* =======================================
    Settings Menu & Ace Injected Elements
    ======================================= */
-.ace_optionsMenuEntry {
-  @apply flex items-center justify-between p-3 rounded-xl mt-2 hover:bg-[#3d3d3d] bg-[#303030] transition-colors;
-  width: 100% !important;
+
+.ace_optionsMenuEntry,
+.settings-card {
+    @apply flex items-center justify-between p-3 rounded-xl mt-2 hover:bg-[#3d3d3d] bg-[#303030] transition-colors;
+    width: 100% !important;
 }
-.ace_optionsMenuEntry > div {
-  @apply flex flex-wrap justify-end gap-3 items-center;
+.ace_optionsMenuEntry > div,
+.settings-card > div {
+    @apply flex flex-wrap justify-end gap-3 items-center;
 }
-.ace_optionsMenuEntry select {
-  @apply bg-[#1e1e1e] border border-neutral-700 hover:bg-[#2b2b2b] items-center text-white rounded-lg px-2 py-1 focus:outline-none transition-colors cursor-pointer;
+.ace_optionsMenuEntry select,
+.settings-card select {
+    @apply bg-[#1e1e1e] border border-neutral-700 hover:bg-[#2b2b2b] items-center text-white rounded-lg px-2 py-1 focus:outline-none transition-colors cursor-pointer;
 }
-.ace_optionsMenuEntry select option {
-  @apply bg-[#303030] text-white;
+.ace_optionsMenuEntry select option,
+.settings-card select option {
+    @apply bg-[#303030] text-white;
 }
 .ace_optionsMenuEntry input[type="number"],
-.ace_optionsMenuEntry input[type="text"] {
-  @apply bg-[#1e1e1e] border border-neutral-700 rounded-lg px-2 py-1 text-white text-center w-16 focus:outline-none focus:border-neutral-400 transition-colors;
+.ace_optionsMenuEntry input[type="text"],
+.settings-card input[type="number"],
+.settings-card input[type="text"] {
+    @apply bg-[#1e1e1e] border border-neutral-700 rounded-lg pl-2 pr-1 py-1 text-white text-center min-w-20 focus:outline-none focus:border-neutral-400 transition-colors;
 }
-.ace_optionsMenuEntry button {
-  @apply bg-[#1e1e1e] border border-neutral-700 focus:outline-none text-center inline-flex justify-center items-center rounded-2xl text-white py-1 px-3 min-w-[4rem] transition-colors cursor-pointer shadow-sm;
+.ace_optionsMenuEntry button,
+.settings-card button {
+    @apply bg-[#1e1e1e] border border-neutral-700 focus:outline-none text-center inline-flex justify-center items-center rounded-2xl text-white py-1 m-1 px-3 min-w-16 transition-colors cursor-pointer shadow-sm;
 }
-.ace_optionsMenuEntry button:hover {
-  @apply border-neutral-500 bg-[#2b2b2b];
+.ace_optionsMenuEntry button:hover,
+.settings-card button:hover {
+    @apply border-neutral-500 bg-[#2b2b2b];
 }
-.ace_optionsMenuEntry button[ace_selected_button=true] {
-  @apply bg-[#444] border-neutral-400 shadow-md;
+.ace_optionsMenuEntry button[ace_selected_button="true"] {
+    @apply bg-[#444] border-neutral-400 shadow-md;
 }
-.ace_optionsMenuEntry label {
-  @apply text-white font-thin cursor-pointer;
+.ace_optionsMenuEntry label,
+.settings-card label {
+    @apply text-white font-thin cursor-pointer;
+}
+.ace_optionsMenuEntry > td {
+    @apply flex justify-end items-center gap-2;
+}
+.ace_optionsMenuEntry select {
+    @apply bg-[#1e1e1e] border border-neutral-700 hover:bg-[#2b2b2b] items-center text-white rounded-lg px-2 py-1 focus:outline-none transition-colors cursor-pointer;
+    width: auto !important;
+    min-width: 120px !important;
+}
+.ace_optionsMenuEntry select option {
+    @apply bg-[#303030] text-white p-2;
+}
+.ace_optionsMenuEntry input[type="number"]::-webkit-inner-spin-button,
+.ace_optionsMenuEntry input[type="number"]::-webkit-outer-spin-button {
+    -moz-appearance: textfield !important;
+    -webkit-appearance: none !important;
+    margin: 0 !important;
 }
 
+#ace-version {
+    @apply text-sm text-neutral-500 mt-6;
+}
 /* =======================================
    Custom Scrollbar: Settings Menu Modal
    ======================================= */
 #settings-menu .overflow-y-auto {
-  scrollbar-width: thin;
-  scrollbar-color: #4a4a4a transparent;
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a4a transparent;
 }
 #settings-menu .overflow-y-auto::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 #settings-menu .overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 #settings-menu .overflow-y-auto::-webkit-scrollbar-thumb {
-  @apply bg-neutral-600 rounded-full border-2 border-neutral-900;
+    @apply bg-neutral-600 rounded-full border-2 border-neutral-900;
 }
 #settings-menu .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  @apply bg-neutral-500;
+    @apply bg-neutral-500;
 }
 #controls {
     width: 100%;
@@ -87,87 +120,88 @@
 #more-controls {
     width: 100%;
 }
-#ace-version {
-    @apply text-sm text-neutral-500 mt-6;
-}
 /* =============================
-   Ace Editor Custom Scrollbar 
+   Ace Editor Custom Scrollbar
    ============================= */
 .ace_editor .ace_sb-v {
-  background-color: #1e1e1e !important;
-  border-left: 1px solid #333 !important;
-  width: 14px !important;
+    background-color: #1e1e1e !important;
+    border-left: 1px solid #333 !important;
+    width: 14px !important;
 }
 .ace_editor .ace_sb-h {
-  background-color: #1e1e1e !important;
-  border-top: 1px solid #333 !important;
-  height: 14px !important;
+    background-color: #1e1e1e !important;
+    border-top: 1px solid #333 !important;
+    height: 14px !important;
 }
 .ace_editor .ace_sb-v > div,
 .ace_editor .ace_sb-h > div {
-  background-color: #303030 !important;
-  border-radius: 10px !important;
-  border: 3px solid #1e1e1e !important; 
-  background-clip: padding-box !important;
+    background-color: #303030 !important;
+    border-radius: 10px !important;
+    border: 3px solid #1e1e1e !important;
+    background-clip: padding-box !important;
 }
 .ace_editor .ace_sb-v > div:hover,
 .ace_editor .ace_sb-h > div:hover {
-  background-color: #666 !important;
+    background-color: #666 !important;
 }
 .ace_editor .ace_sb-v > canvas {
-  opacity: 0.7 !important;
-  pointer-events: none !important;
+    opacity: 0.7 !important;
+    pointer-events: none !important;
 }
 
 /* =============================
    CheckBox -->  Toggle Switch
    ============================= */
 .ace_optionsMenuEntry input[type="checkbox"] {
-  appearance: none;
-  @apply w-10 h-5 bg-neutral-700 rounded-[20px] relative cursor-pointer transition-colors duration-300 shadow-inner flex items-center m-0;
+    appearance: none;
+    @apply w-10 h-5 bg-neutral-700 rounded-[20px] relative cursor-pointer transition-colors duration-300 shadow-inner flex items-center m-0;
 }
 .ace_optionsMenuEntry input[type="checkbox"]::after {
-  content: "";
-  @apply absolute w-4 h-4 bg-neutral-400 rounded-full left-0.5 transition-transform duration-300 shadow-sm;
+    content: "";
+    @apply absolute w-4 h-4 bg-neutral-400 rounded-full left-0.5 transition-transform duration-300 shadow-sm;
 }
 .ace_optionsMenuEntry input[type="checkbox"]:checked {
-  @apply bg-neutral-900 border border-neutral-700;
+    @apply bg-neutral-900 border border-neutral-700;
 }
 .ace_optionsMenuEntry input[type="checkbox"]:checked::after {
-  @apply transform translate-x-5 bg-neutral-300;
+    @apply transform translate-x-5 bg-neutral-300;
 }
 
 /* ====================
    Status Bar Styles
    ==================== */
 .status-bar-ace {
-  @apply bg-[#1e1e1e] text-white grow items-center px-1;
+    @apply bg-[#1e1e1e] text-white grow items-center px-1;
 }
 
 /* ====================
    File Tree Styles
    ==================== */
-#file-tree div:hover, 
+#file-tree div:hover,
 #file-tree summary:hover {
-  background-color: #333;
+    background-color: #333;
 }
-#file-tree summary::-webkit-details-marker { 
-  display: none; 
+#file-tree summary::-webkit-details-marker {
+    display: none;
 }
-#file-tree summary { 
-  list-style: none; display: flex; align-items: center; gap: 5px; cursor: pointer;
+#file-tree summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
 }
 #file-tree summary::before {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background-color: currentColor;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
-  mask-repeat: no-repeat;
-  transition: transform 0.2s ease;
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    transition: transform 0.2s ease;
 }
 #file-tree details[open] > summary::before {
-  transform: rotate(90deg);
+    transform: rotate(90deg);
 }

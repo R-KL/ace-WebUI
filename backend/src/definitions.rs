@@ -10,8 +10,8 @@ use rkyv;
 use std::io::Error;
 use std::io::ErrorKind;
 
-use futures::AsyncWriteExt;
 use futures::io::AsyncReadExt;
+use futures::AsyncWriteExt;
 use futures::StreamExt;
 
 use log::{error, info, warn};
@@ -88,6 +88,10 @@ macro_rules! impl_db {
         }
     };
 }
+
+///////////////////////////////////
+//     Embedded assets struct    //
+///////////////////////////////////
 
 ///////////////////////////////////
 //Editor Config code begins here //
@@ -246,7 +250,6 @@ pub(crate) struct FileTreeRequest {
     pub(crate) path: Option<String>,
 }
 
-
 impl_db!(EditorConfig);
 pub(crate) struct ReDb {
     db: Database,
@@ -307,7 +310,7 @@ impl ReDb {
     }
 }
 
-//This struct will try to map the FileSystemAPI used with OPFS , so that the same file tree can be used for this too. 
+//This struct will try to map the FileSystemAPI used with OPFS , so that the same file tree can be used for this too.
 pub(crate) struct EditorVfs {
     root: AsyncVfsPath,
 }
@@ -382,17 +385,25 @@ impl EditorVfs {
         let dir = match self.root.join(path) {
             Ok(dir) => dir,
             Err(e) => {
-                warn!("Could not make a new directory at {} due to error: {}",self.root.as_str(),e);
-                return Err(e)            
+                warn!(
+                    "Could not make a new directory at {} due to error: {}",
+                    self.root.as_str(),
+                    e
+                );
+                return Err(e);
             }
         };
         match dir.create_dir().await {
             Ok(_) => {
-                info!("Created a new directory at {}",self.root.as_str());
+                info!("Created a new directory at {}", self.root.as_str());
                 Ok(true)
-            },
+            }
             Err(e) => {
-                warn!("Could not make a new directory at {} due to error {}",self.root.as_str(),e);
+                warn!(
+                    "Could not make a new directory at {} due to error {}",
+                    self.root.as_str(),
+                    e
+                );
                 Err(e)
             }
         }
@@ -401,7 +412,7 @@ impl EditorVfs {
         let file = match self.root.join(&file_path) {
             Ok(file) => file,
             Err(e) => {
-                warn!("Could not read the file {} due to error: {}",file_path,e);
+                warn!("Could not read the file {} due to error: {}", file_path, e);
                 return Err(e);
             }
         };
@@ -409,18 +420,27 @@ impl EditorVfs {
         file.open_file().await?.read_to_string(&mut result).await?;
         Ok(result)
     }
-    pub(crate) async fn write(&self, file_path: String, content: String ) -> std::result::Result<bool, VfsError> {
+    pub(crate) async fn write(
+        &self,
+        file_path: String,
+        content: String,
+    ) -> std::result::Result<bool, VfsError> {
         let file = match self.root.join(&file_path) {
             Ok(file) => file,
             Err(e) => {
-                warn!("Could not write the file {} due to error {}",file_path,e);
+                warn!("Could not write the file {} due to error {}", file_path, e);
                 return Err(e);
             }
         };
-        match file.create_file().await?.write_all(&content.into_bytes()).await {
+        match file
+            .create_file()
+            .await?
+            .write_all(&content.into_bytes())
+            .await
+        {
             Ok(_) => Ok(true),
             Err(e) => {
-                warn!("Could not write to {}  due to the error: {}", file_path,e);
+                warn!("Could not write to {}  due to the error: {}", file_path, e);
                 return Err(VfsError::from(e));
             }
         }
