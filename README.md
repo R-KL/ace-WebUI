@@ -1,5 +1,10 @@
 #  Ace-Editor Web-UI Built-in Rust
 
+> [!NOTE]
+>
+> Visit [Beta](https://github.com/R-KL/ace-WebUI/tree/beta) branch for latest updates
+
+
 A high-performance, standalone, self-hosted code editor powered by a Rust backend and a modern web component frontend. The entire application compiles into a single binary for easy deployment.
 
 ## About the Project
